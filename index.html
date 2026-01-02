@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema Natal Família 2026</title>
+    
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>??</text></svg>">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Fonte Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Ícones -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <!-- Calendário -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/pt.js"></script>
+    
+    <!-- SUPABASE -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #0f172a; /* Slate 900 */
+            color: #f1f5f9; /* Slate 100 */
+        }
+
+        .card {
+            background-color: #1e293b; /* Slate 800 */
+            border: 1px solid #334155; /* Slate 700 */
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+        }
+
+        .tab-btn { 
+            padding: 0.5rem 1rem; 
+            border-radius: 0.5rem; 
+            font-size: 0.875rem; 
+            font-weight: 500; 
+            color: #94a3b8; 
+            transition: all 0.2s;
+        }
+        .tab-btn:hover { color: white; background-color: #334155; }
+        .tab-btn.active { background-color: #4f46e5; color: white; }
+
+        /* Scrollbar da tabela */
+        ::-webkit-scrollbar { height: 8px; width: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+        /* Badges de Status (Cores Dinâmicas) */
+        .status-badge {
+            font-size: 0.75rem; 
+            font-weight: 600; 
+            padding: 1px 0; /* COMPACTO */
+            width: 100%; 
+            display: block; 
+            border-radius: 4px; 
+            text-align: center;
+        }
+        
+        /* Regras de Cores */
+        .bg-paid { background-color: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.2); } /* Verde */
+        .bg-partial { background-color: rgba(250, 204, 21, 0.15); color: #facc15; border: 1px solid rgba(250, 204, 21, 0.2); } /* Amarelo */
+        .bg-missed { background-color: rgba(248, 113, 113, 0.15); color: #f87171; border: 1px solid rgba(248, 113, 113, 0.2); } /* Vermelho */
+        .bg-none { background-color: rgba(148, 163, 184, 0.1); color: #94a3b8; border: 1px dashed rgba(148, 163, 184, 0.2); } /* Cinza */
+        
+        /* Aniversário */
+        .bg-birthday { 
+            background: linear-gradient(135deg, rgba(236, 72, 153, 0.15), rgba(168, 85, 247, 0.15)); 
+            color: #f472b6; 
+            border: 1px solid rgba(236, 72, 153, 0.3);
+            display: flex; justify-content: center; align-items: center; gap: 2px;
+        }
+
+        .input-dark {
+            background-color: #0f172a;
+            border: 1px solid #334155;
+            color: white;
+            border-radius: 0.5rem;
+            padding: 0.5rem;
+            width: 100%;
+            font-size: 0.875rem;
+        }
+        .input-dark:focus { outline: none; border-color: #6366f1; ring: 1px #6366f1; }
+
+        /* Animação simples */
+        .fade-in { animation: fadeIn 0.3s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Ajuste da Coluna Fixa */
+        th.sticky-col, td.sticky-col {
+            position: sticky;
+            left: 0;
+            z-index: 20; 
+            background-color: #1e293b;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+        }
+        tr:hover td.sticky-col { background-color: #334155; }
+        
+        /* Imagem de Perfil */
+        .profile-pic {
+            object-fit: cover;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Loading Overlay */
+        #loadingOverlay {
+            background: rgba(15, 23, 42, 0.9);
+            z-index: 200;
+            position: fixed;
+            inset: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            flex-direction: column;
+        }
+        
+        /* Esconde elementos de admin para users */
+        body.role-user .admin-only { display: none !important; }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+
+    <!-- Loading -->
+    <div id="loadingOverlay" class="hidden">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-white mb-4"></div>
+        <p>Sincronizando com a Nuvem...</p>
+    </div>
+
+    <!-- TELA DE LOGIN -->
+    <div id="loginScreen" class="fixed inset-0 z-[100] bg-slate-900 flex flex-col items-center justify-center p-4">
+        <div class="card w-full max-w-md shadow-2xl border-t-4 border-t-indigo-500">
+            <div class="text-center mb-8">
+                <div class="bg-indigo-600 w-16 h-16 rounded-2xl shadow-lg flex items-center justify-center text-4xl mx-auto mb-4">??</div>
+                <h1 class="text-2xl font-bold text-white">Natal Família 2026</h1>
+                <p class="text-slate-400 text-sm">Faça login para acessar</p>
+            </div>
+            
+            <form onsubmit="handleLogin(event)" class="space-y-4">
+                <div>
+                    <label class="text-xs uppercase font-bold text-slate-500 mb-1 block">Usuário</label>
+                    <div class="relative">
+                        <i class="ph ph-user absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"></i>
+                        <input type="text" id="loginUser" class="input-dark pl-10 bg-slate-950" placeholder="Digite seu usuário" required>
+                    </div>
+                </div>
+                <div>
+                    <label class="text-xs uppercase font-bold text-slate-500 mb-1 block">Senha</label>
+                    <div class="relative">
+                        <i class="ph ph-lock absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"></i>
+                        <input type="password" id="loginPass" class="input-dark pl-10 bg-slate-950" placeholder="Digite sua senha" required>
+                    </div>
+                </div>
+                <p id="loginError" class="text-rose-500 text-xs text-center h-4"></p>
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-lg transition shadow-lg shadow-indigo-500/20">
+                    Entrar no Sistema
+                </button>
+            </form>
+        </div>
+        <p class="mt-8 text-slate-600 text-xs">Sistema Online • Supabase</p>
+    </div>
+
+    <!-- Navbar -->
+    <nav id="mainNavbar" class="hidden bg-slate-800 border-b border-slate-700 sticky top-0 z-50 h-16 shadow-md">
+        <div class="max-w-7xl mx-auto px-4 h-full flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <!-- Ícone Papai Noel -->
+                <div class="bg-rose-600 p-1.5 rounded-lg shadow-lg flex items-center justify-center w-10 h-10">
+                    <span class="text-2xl leading-none">??</span>
+                </div>
+                <!-- Título Branco -->
+                <h1 class="text-lg font-bold text-white tracking-tight hidden sm:block">
+                    Natal Família 2026
+                </h1>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <div class="flex bg-slate-900/50 p-1 rounded-lg border border-slate-700">
+                    <button onclick="switchTab('dashboard')" id="btn-dashboard" class="tab-btn active">
+                        <i class="ph ph-chart-pie-slice mr-1"></i> Painel
+                    </button>
+                    <!-- Apenas Admin -->
+                    <button onclick="switchTab('admin')" id="btn-admin" class="tab-btn admin-only">
+                        <i class="ph ph-gear mr-1"></i> Configurar
+                    </button>
+                </div>
+                <button onclick="handleLogout()" class="text-slate-400 hover:text-white transition" title="Sair">
+                    <i class="ph ph-sign-out text-xl"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Conteúdo -->
+    <main id="mainContent" class="hidden flex-grow p-4 sm:p-6 w-full max-w-7xl mx-auto space-y-6">
+
+        <!-- VIEW: DASHBOARD -->
+        <div id="view-dashboard" class="fade-in space-y-6">
+            
+            <!-- Header Ações -->
+            <div class="flex flex-col sm:flex-row justify-between items-end sm:items-center gap-4">
+                <div>
+                    <h2 class="text-xl font-bold text-white">Visão Geral Financeira</h2>
+                    <p class="text-sm text-slate-400">Acompanhamento de pagamentos e metas.</p>
+                </div>
+                <!-- Botões (Admin Only) -->
+                <div class="flex gap-3 admin-only">
+                    <button onclick="resetData()" class="text-xs text-rose-400 hover:text-rose-300 font-medium px-3 py-2 border border-rose-900 rounded hover:bg-rose-900/20 transition flex items-center gap-2">
+                        <i class="ph ph-trash"></i> Resetar
+                    </button>
+                    <label class="cursor-pointer bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300 px-4 py-2 rounded text-xs font-bold uppercase transition flex items-center gap-2">
+                        <i class="ph ph-file-csv text-green-400 text-lg"></i> Importar CSV
+                        <input type="file" id="csvInput" accept=".csv" class="hidden">
+                    </label>
+                </div>
+            </div>
+
+            <!-- Cards Resumo -->
+            <div id="dashboardSummary" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- JS Preenche -->
+            </div>
+
+            <!-- Tabela Detalhada -->
+            <div class="card overflow-hidden !p-0 border border-slate-700">
+                <div class="p-4 border-b border-slate-700 flex justify-between items-center bg-slate-800">
+                    <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                        <i class="ph ph-users text-indigo-400"></i> Detalhamento por Participante
+                    </h3>
+                    <input type="text" id="searchInput" placeholder="Buscar participante..." class="input-dark !w-48 !py-1 !text-xs">
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-900 text-slate-400 text-[10px] uppercase font-bold border-b border-slate-700">
+                                <th class="p-2 sticky-col min-w-[200px] text-slate-300 pl-4">Participante</th>
+                                <th class="p-1 text-center w-14">Jan</th>
+                                <th class="p-1 text-center w-14">Fev</th>
+                                <th class="p-1 text-center w-14">Mar</th>
+                                <th class="p-1 text-center w-14">Abr</th>
+                                <th class="p-1 text-center w-14">Mai</th>
+                                <th class="p-1 text-center w-14">Jun</th>
+                                <th class="p-1 text-center w-14">Jul</th>
+                                <th class="p-1 text-center w-14">Ago</th>
+                                <th class="p-1 text-center w-14">Set</th>
+                                <th class="p-1 text-center w-14">Out</th>
+                                <th class="p-1 text-center w-14">Nov</th>
+                                <th class="p-1 text-center w-14">Dez</th>
+                                <!-- Multa (Dívida) -->
+                                <th class="p-1 text-center bg-rose-900/10 border-l border-rose-900/20 text-rose-400 min-w-[50px]" title="Dívida de Multa">Multa</th>
+                                <!-- Extra (Pagamento) -->
+                                <th class="p-1 text-center bg-indigo-900/10 border-l border-indigo-900/20 text-indigo-400 min-w-[50px]" title="Valor Extra Pago">Extra</th>
+                                <th class="p-2 text-right bg-slate-800/50 min-w-[80px]">Total</th>
+                                <th class="p-2 text-right bg-slate-800/50 border-r border-slate-700 min-w-[80px]">Falta</th>
+                                <!-- Edit (Admin Only) -->
+                                <th class="p-2 text-center sticky right-0 bg-slate-900 z-10 w-12 shadow-[-5px_0_10px_rgba(0,0,0,0.2)] admin-only">Edit</th>
+                            </tr>
+                        </thead>
+                        <tbody id="participantsTableBody" class="text-sm divide-y divide-slate-700 bg-slate-800">
+                            <!-- JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Gráficos -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Gráfico Status -->
+                <div class="card lg:col-span-1 flex flex-col items-center justify-center">
+                    <h3 class="text-sm font-bold text-slate-400 w-full mb-4 flex items-center gap-2 border-b border-slate-700 pb-2">
+                        <i class="ph ph-chart-donut text-indigo-400"></i> Status de Quitação
+                    </h3>
+                    <div class="relative w-48 h-48 my-4">
+                        <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                            <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#334155" stroke-width="2" />
+                            <path id="pieChartPath" d="" fill="none" stroke="#6366f1" stroke-width="2" stroke-dasharray="0, 100" class="transition-all duration-1000" />
+                        </svg>
+                        <div class="absolute inset-0 flex flex-col items-center justify-center">
+                            <span id="pieChartPercent" class="text-3xl font-bold text-white">0%</span>
+                            <span class="text-xs text-slate-500 uppercase tracking-widest font-bold">Pago</span>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 w-full mt-2">
+                        <div class="bg-slate-900 p-2 rounded text-center border border-slate-700">
+                            <span id="countOk" class="block text-lg font-bold text-emerald-400">0</span>
+                            <span class="text-[10px] uppercase text-slate-500 font-bold">Em dia</span>
+                        </div>
+                        <div class="bg-slate-900 p-2 rounded text-center border border-slate-700">
+                            <span id="countPending" class="block text-lg font-bold text-rose-400">0</span>
+                            <span class="text-[10px] uppercase text-slate-500 font-bold">Pendente</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Barra Progresso -->
+                <div class="card lg:col-span-2 flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-400 mb-6 flex items-center gap-2 border-b border-slate-700 pb-2">
+                            <i class="ph ph-trend-up text-emerald-400"></i> Evolução da Arrecadação
+                        </h3>
+                        <div class="flex justify-between text-sm text-slate-300 mb-2">
+                            <span>Progresso Atual</span>
+                            <span id="metaLabel" class="font-mono text-slate-400">Meta: R$ 0</span>
+                        </div>
+                        <div class="w-full bg-slate-900 rounded-full h-8 border border-slate-700 relative overflow-hidden">
+                            <div id="mainProgressBar" class="bg-gradient-to-r from-emerald-600 to-teal-500 h-full flex items-center justify-end pr-3 text-xs font-bold text-white shadow-[0_0_10px_rgba(16,185,129,0.3)] transition-all duration-1000" style="width: 0%">
+                                0%
+                            </div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-4 mt-8">
+                        <div class="bg-slate-900 p-4 rounded-lg border border-slate-700 text-center">
+                            <p class="text-[10px] text-slate-500 font-bold uppercase mb-1">Esperado Total</p>
+                            <p id="summaryTotalExpected" class="text-lg font-bold text-white">R$ 0</p>
+                        </div>
+                        <div class="bg-slate-900 p-4 rounded-lg border border-slate-700 text-center">
+                            <p class="text-[10px] text-slate-500 font-bold uppercase mb-1">Confirmado</p>
+                            <p id="summaryTotalPaid" class="text-lg font-bold text-emerald-400">R$ 0</p>
+                        </div>
+                        <div class="bg-slate-900 p-4 rounded-lg border border-slate-700 text-center">
+                            <p class="text-[10px] text-slate-500 font-bold uppercase mb-1">Em Aberto</p>
+                            <p id="summaryTotalMissing" class="text-lg font-bold text-rose-400">R$ 0</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW: ADMIN -->
+        <div id="view-admin" class="hidden fade-in max-w-5xl mx-auto space-y-8">
+            <h2 class="text-2xl font-bold text-white">Configurações do Sistema</h2>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                
+                <!-- 1. Metas Mensais -->
+                <div class="card border-l-4 border-l-indigo-500">
+                    <h3 class="text-base font-bold text-white mb-2 flex items-center gap-2">
+                        <i class="ph ph-currency-dollar text-indigo-400"></i> Metas Mensais (R$)
+                    </h3>
+                    <p class="text-xs text-slate-400 mb-6">Defina quanto cada pessoa deve pagar por mês.</p>
+
+                    <div class="grid grid-cols-3 sm:grid-cols-4 gap-3" id="monthlyGoalsContainer">
+                        <!-- JS Inputs -->
+                    </div>
+                    
+                    <div class="mt-6 pt-4 border-t border-slate-700 flex justify-between items-center">
+                        <div class="text-xs text-slate-400">Total Anual por Pessoa: <span id="totalAnnualGoal" class="text-white font-mono font-bold ml-1">R$ 0,00</span></div>
+                        <button onclick="saveMonthlyGoals()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold uppercase py-2 px-4 rounded transition shadow-lg">Salvar Metas</button>
+                    </div>
+                </div>
+
+                <!-- Coluna Direita -->
+                <div class="space-y-6">
+                    
+                    <!-- 2. Cadastro Rápido -->
+                    <div class="card border-l-4 border-l-emerald-500">
+                        <h3 class="text-base font-bold text-white mb-4 flex items-center gap-2">
+                            <i class="ph ph-user-plus text-emerald-400"></i> Novo Participante
+                        </h3>
+                        
+                        <div class="space-y-3">
+                            <input type="text" id="newUserName" placeholder="Nome Completo" class="input-dark">
+                            <div class="flex gap-2 items-center">
+                                <!-- Botão de Upload de Foto -->
+                                <label class="cursor-pointer bg-slate-700 hover:bg-slate-600 text-white p-2 rounded text-xs flex items-center justify-center min-w-[40px] border border-slate-600 transition" title="Escolher Foto">
+                                    <i class="ph ph-camera text-lg"></i>
+                                    <input type="file" id="newUserPhotoFile" accept="image/*" class="hidden" onchange="previewAddUserImage(this)">
+                                </label>
+                                <span id="newUserPhotoName" class="text-xs text-slate-500 truncate max-w-[100px] hidden">Foto selecionada</span>
+
+                                <select id="newUserBirthday" class="input-dark text-xs flex-grow">
+                                    <option value="">Mês do Aniversário</option>
+                                    <option value="0">Janeiro</option><option value="1">Fevereiro</option><option value="2">Março</option>
+                                    <option value="3">Abril</option><option value="4">Maio</option><option value="5">Junho</option>
+                                    <option value="6">Julho</option><option value="7">Agosto</option><option value="8">Setembro</option>
+                                    <option value="9">Outubro</option><option value="10">Novembro</option><option value="11">Dezembro</option>
+                                </select>
+                            </div>
+                            <button onclick="addParticipant()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-2 rounded font-bold transition">Adicionar</button>
+                        </div>
+                        
+                        <!-- Mini Lista -->
+                        <div class="mt-6 border-t border-slate-700 pt-4">
+                            <h4 class="text-xs font-bold text-slate-500 uppercase mb-2">Cadastrados</h4>
+                            <div class="overflow-y-auto max-h-40 rounded border border-slate-700">
+                                <table class="w-full text-left">
+                                    <tbody id="adminUsersTableBody" class="divide-y divide-slate-700 text-xs text-slate-300 bg-slate-900"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. Multas -->
+                    <div class="card border-l-4 border-l-rose-500">
+                        <h3 class="text-base font-bold text-white mb-2 flex items-center gap-2">
+                            <i class="ph ph-siren text-rose-400"></i> Auditoria de Inadimplência
+                        </h3>
+                        <p class="text-[10px] text-slate-400 mb-4 bg-slate-900 p-2 rounded border border-slate-700">
+                            <strong>Regra:</strong> Quem não tiver pago o mínimo até a data limite recebe uma <strong>Multa (Dívida)</strong>.
+                        </p>
+
+                        <div class="space-y-3">
+                            <div>
+                                <label class="text-[10px] text-slate-500 font-bold uppercase block mb-1">Data Limite (Prazo)</label>
+                                <input type="text" id="fineDeadline" class="input-dark bg-slate-900" placeholder="Ex: 20/05/2026" onchange="saveFineConfig()">
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="text-[10px] text-slate-500 font-bold uppercase block mb-1">Mínimo Pago (R$)</label>
+                                    <input type="number" id="fineThreshold" class="input-dark" value="50" onchange="saveFineConfig()">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] text-slate-500 font-bold uppercase block mb-1">Multa (R$)</label>
+                                    <input type="number" id="fineValue" class="input-dark border-rose-500/30 text-rose-400" value="15" onchange="saveFineConfig()">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4 pt-3 border-t border-slate-700">
+                            <button onclick="manualFineCheck()" class="w-full bg-rose-900/30 border border-rose-500/30 hover:bg-rose-900/50 text-rose-200 text-xs font-bold uppercase py-2 rounded transition flex items-center justify-center gap-2">
+                                <i class="ph ph-gavel"></i> Verificar e Aplicar
+                            </button>
+                            <p id="fineFeedback" class="text-center text-xs mt-2 text-slate-500 h-4"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Modal Editar -->
+    <div id="editPaymentModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center px-4 bg-slate-900/80 backdrop-blur-sm fade-in">
+        <div class="bg-slate-800 rounded-lg shadow-2xl border border-slate-600 w-full max-w-xl overflow-hidden">
+            <div class="bg-slate-900 px-6 py-4 border-b border-slate-700 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-white flex items-center gap-2"><i class="ph ph-pencil-simple text-indigo-400"></i> Editar Dados</h3>
+                <button onclick="closeEditModal()" class="text-slate-400 hover:text-white transition"><i class="ph ph-x text-xl"></i></button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto max-h-[80vh]">
+                <!-- Info do Usuário -->
+                <div class="mb-6 pb-4 border-b border-slate-700">
+                    <h4 class="text-xs font-bold uppercase text-slate-500 mb-3">Informações Pessoais</h4>
+                    <div class="flex gap-4 items-start">
+                        <!-- Foto Clicável para Editar -->
+                        <div class="relative w-16 h-16 rounded-full bg-slate-700 flex-shrink-0 border-2 border-slate-600 overflow-hidden cursor-pointer group" onclick="document.getElementById('editPhotoFile').click()">
+                            <img id="modalAvatarImg" class="profile-pic hidden" src="" alt="">
+                            <div id="modalAvatarText" class="absolute inset-0 flex items-center justify-center text-2xl font-bold text-slate-400">A</div>
+                            <!-- Overlay de Edição -->
+                            <div class="absolute inset-0 bg-black/50 hidden group-hover:flex items-center justify-center text-white text-xs">
+                                <i class="ph ph-camera"></i>
+                            </div>
+                            <input type="file" id="editPhotoFile" accept="image/*" class="hidden" onchange="previewEditUserImage(this)">
+                        </div>
+
+                        <div class="space-y-3 flex-grow">
+                            <div>
+                                <label class="text-[10px] text-slate-400 uppercase font-bold">Mês do Aniversário</label>
+                                <select id="editBirthdayMonth" class="input-dark text-xs p-1.5">
+                                    <option value="-1">Sem registro</option>
+                                    <option value="0">Janeiro</option><option value="1">Fevereiro</option><option value="2">Março</option>
+                                    <option value="3">Abril</option><option value="4">Maio</option><option value="5">Junho</option>
+                                    <option value="6">Julho</option><option value="7">Agosto</option><option value="8">Setembro</option>
+                                    <option value="9">Outubro</option><option value="10">Novembro</option><option value="11">Dezembro</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <h2 class="text-xl font-bold text-white mt-4" id="modalParticipantName">Nome</h2>
+                </div>
+                
+                <input type="hidden" id="editParticipantIndex">
+
+                <h4 class="text-xs font-bold uppercase text-slate-500 mb-3">Pagamentos Mensais</h4>
+                <div class="grid grid-cols-3 sm:grid-cols-4 gap-3 mb-6" id="editMonthsContainer">
+                    <!-- JS Inputs -->
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <!-- Campo MULTA (DÍVIDA) -->
+                    <div class="bg-rose-900/10 p-3 rounded border border-rose-500/20">
+                        <label class="text-xs font-bold uppercase text-rose-400 block mb-2">Multa (Dívida)</label>
+                        <div class="flex items-center gap-2">
+                            <span class="text-slate-500 text-sm">R$</span>
+                            <input type="number" id="editFineValue" class="bg-slate-900 border border-rose-500/30 text-rose-400 font-bold rounded w-full p-1 text-right focus:border-rose-500 outline-none">
+                        </div>
+                    </div>
+
+                    <!-- Campo EXTRA (PAGAMENTO) -->
+                    <div class="bg-indigo-900/10 p-3 rounded border border-indigo-500/20">
+                        <label class="text-xs font-bold uppercase text-indigo-400 block mb-2">Extra Pago (Crédito)</label>
+                        <div class="flex items-center gap-2">
+                            <span class="text-slate-500 text-sm">R$</span>
+                            <input type="number" id="editExtraValue" class="bg-slate-900 border border-indigo-500/30 text-indigo-400 font-bold rounded w-full p-1 text-right focus:border-indigo-500 outline-none">
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="fineWarning" class="hidden mt-4 p-2 bg-rose-900/30 border border-rose-500/30 rounded text-xs text-rose-300 text-center animate-pulse">
+                    ?? Atenção: Pagamento em atraso. Uma multa de R$ <span id="fineWarnValue"></span> será lançada como dívida.
+                </div>
+            </div>
+
+            <div class="bg-slate-900 px-6 py-4 flex justify-end gap-3 border-t border-slate-700">
+                <button onclick="closeEditModal()" class="px-4 py-2 rounded text-sm font-bold text-slate-400 hover:text-white hover:bg-slate-800 transition">Cancelar</button>
+                <button onclick="saveEditModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded text-sm font-bold shadow-lg transition">Salvar Alterações</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // CONFIGURAÇÕES SUPABASE
+        const SUPABASE_URL = 'sb_publishable_6zSIq0JvrPk8JssXrNjq6A_KV1ahh_5'; // <--- COLE AQUI
+        const SUPABASE_KEY = 'sb_secret_x98u9yWQXP8M_QnEdM-DrQ_8NCAtOWl';   // <--- COLE AQUI
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // VARIÁVEIS GLOBAIS
+        const MONTHS_ABBR = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+        let monthlyGoals = [0, 0, 30, 30, 30, 30, 30, 30, 30, 30, 55, 55];
+        let participantsData = [];
+        let fineConfig = { deadline: '20/05/2026', threshold: 50, value: 15 };
+        let currentUserRole = null;
+        
+        // IMAGENS TEMPORÁRIAS
+        let tempAddPhotoBase64 = '';
+        let tempEditPhotoBase64 = '';
+
+        // === AUTH E INIT ===
+        function handleLogin(e) {
+            e.preventDefault();
+            const user = document.getElementById('loginUser').value;
+            const pass = document.getElementById('loginPass').value;
+            
+            if (user === 'admin' && pass === 'Admin2026') { 
+                currentUserRole = 'admin'; 
+                enterSystem(); 
+            } else if (user === 'Natal' && pass === '2026') { 
+                currentUserRole = 'user'; 
+                enterSystem(); 
+            } else { 
+                document.getElementById('loginError').innerText = "Usuário ou senha incorretos."; 
+            }
+        }
+
+        function enterSystem() {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('mainNavbar').classList.remove('hidden');
+            document.getElementById('mainContent').classList.remove('hidden');
+            
+            // Aplica role ao body para controle de UI
+            document.body.className = `flex flex-col min-h-screen role-${currentUserRole}`;
+            
+            initSystem();
+        }
+
+        function handleLogout() { location.reload(); }
+
+        function initSystem() {
+            initDatePickers();
+            loadFromSupabase(); // Carrega da nuvem
+        }
+
+        // === BANCO DE DADOS (SUPABASE) ===
+        async function loadFromSupabase() {
+            showLoading(true);
+            try {
+                // Busca a linha com id=1 (onde guardamos tudo)
+                const { data, error } = await supabase.from('natal_2026').select('conteudo').eq('id', 1).single();
+                
+                if (error && error.code !== 'PGRST116') { // Ignora erro de "não encontrado" na primeira vez
+                    console.error('Erro ao carregar:', error);
+                    alert('Erro ao carregar dados da nuvem.');
+                }
+
+                if (data && data.conteudo) {
+                    const content = data.conteudo;
+                    if (content.participants) participantsData = content.participants;
+                    if (content.goals) monthlyGoals = content.goals;
+                    if (content.fine) fineConfig = content.fine;
+                } else {
+                    // Se não existir, carrega demo e salva
+                    loadDemoData(); 
+                    saveToSupabase(); 
+                }
+                
+                // Atualiza Interface
+                renderMonthlyGoalsInputs();
+                updateTotalAnnualGoalUI();
+                
+                // Configura campos de multa com dados carregados
+                document.getElementById('fineThreshold').value = fineConfig.threshold;
+                document.getElementById('fineValue').value = fineConfig.value;
+                if(document.getElementById('fineDeadline')._flatpickr) {
+                     document.getElementById('fineDeadline')._flatpickr.setDate(fineConfig.deadline);
+                }
+
+                calculateTotalsAndRender();
+
+            } catch (err) {
+                console.error(err);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function saveToSupabase() {
+            showLoading(true);
+            const payload = {
+                participants: participantsData,
+                goals: monthlyGoals,
+                fine: fineConfig
+            };
+
+            const { error } = await supabase.from('natal_2026').upsert({ id: 1, tipo: 'dados_gerais', conteudo: payload });
+
+            if (error) {
+                console.error('Erro ao salvar:', error);
+                alert('Erro ao salvar na nuvem!');
+            }
+            showLoading(false);
+        }
+
+        function resetData() {
+            if(confirm("ATENÇÃO: Isso apagará todos os dados DO BANCO DE DADOS para todos os usuários. Tem certeza?")) {
+                 // Zera local e salva no banco vazio
+                 participantsData = [];
+                 monthlyGoals = [0,0,0,0,0,0,0,0,0,0,0,0];
+                 calculateTotalsAndRender();
+                 saveToSupabase();
+            }
+        }
+
+        function showLoading(show) {
+            const el = document.getElementById('loadingOverlay');
+            if(show) el.classList.remove('hidden'); else el.classList.add('hidden');
+        }
+
+        // === CÁLCULOS E RENDERIZAÇÃO ===
+        function calculateTotalsAndRender() {
+            const baseTotalGoal = monthlyGoals.reduce((a,b) => a+b, 0);
+
+            participantsData.forEach(p => {
+                if (p.fine === undefined) p.fine = 0;
+                let personalGoal = baseTotalGoal;
+                let paidSum = 0;
+                // Aniversário
+                if (p.birthdayMonth !== null && p.birthdayMonth >= 0 && p.birthdayMonth < 12) {
+                    personalGoal -= monthlyGoals[p.birthdayMonth];
+                }
+                p.months.forEach(val => paidSum += val);
+                p.totalPaid = paidSum + (p.extra || 0); // Total pago inclui extra
+                p.totalGoal = personalGoal + (p.fine || 0); // Meta aumenta com multa
+                let missing = p.totalGoal - p.totalPaid;
+                p.missing = missing < 0 ? 0 : missing;
+            });
+            updateDashboard();
+        }
+
+        function updateDashboard() {
+            const totalArrecadado = participantsData.reduce((acc, p) => acc + p.totalPaid, 0);
+            const totalFalta = participantsData.reduce((acc, p) => acc + p.missing, 0);
+            const totalEsperado = totalArrecadado + totalFalta;
+            const progress = totalEsperado > 0 ? (totalArrecadado / totalEsperado) * 100 : 0;
+            const peopleOk = participantsData.filter(p => p.missing <= 0).length;
+
+            // Render Cards
+            document.getElementById('dashboardSummary').innerHTML = `
+                <div class="card border-l-4 border-l-emerald-500"><p class="text-slate-400 text-[10px] font-bold uppercase">Caixa Atual</p><h2 class="text-2xl font-bold text-white mt-1">R$ ${totalArrecadado.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</h2></div>
+                <div class="card border-l-4 border-l-rose-500"><p class="text-slate-400 text-[10px] font-bold uppercase">Falta Receber</p><h2 class="text-2xl font-bold text-white mt-1">R$ ${totalFalta.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</h2></div>
+                <div class="card border-l-4 border-l-indigo-500"><p class="text-slate-400 text-[10px] font-bold uppercase">Participantes</p><div class="flex items-end gap-2 mt-1"><h2 class="text-2xl font-bold text-white">${participantsData.length}</h2><span class="text-xs text-indigo-400 font-bold mb-1 px-2 rounded bg-indigo-900/30">${peopleOk} Quitados</span></div></div>
+                <div class="card border-l-4 border-l-amber-500"><p class="text-slate-400 text-[10px] font-bold uppercase">Extra Arrecadado</p><h2 class="text-2xl font-bold text-white mt-1">R$ ${participantsData.reduce((acc, p) => acc + (p.extra || 0), 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</h2></div>
+            `;
+            // Charts
+            document.getElementById('pieChartPercent').innerText = progress.toFixed(0) + '%';
+            document.getElementById('pieChartPath').setAttribute('stroke-dasharray', `${progress}, 100`);
+            document.getElementById('countOk').innerText = peopleOk;
+            document.getElementById('countPending').innerText = participantsData.length - peopleOk;
+            document.getElementById('mainProgressBar').style.width = `${progress}%`;
+            document.getElementById('metaLabel').innerText = `Meta: R$ ${totalEsperado.toLocaleString('pt-BR')}`;
+            document.getElementById('summaryTotalExpected').innerText = `R$ ${totalEsperado.toLocaleString('pt-BR')}`;
+            document.getElementById('summaryTotalPaid').innerText = `R$ ${totalArrecadado.toLocaleString('pt-BR')}`;
+            document.getElementById('summaryTotalMissing').innerText = `R$ ${totalFalta.toLocaleString('pt-BR')}`;
+
+            renderTable(participantsData);
+        }
+
+        function renderTable(data) {
+            const tbody = document.getElementById('participantsTableBody');
+            tbody.innerHTML = '';
+            if (data.length === 0) { tbody.innerHTML = `<tr><td colspan="17" class="p-8 text-center text-slate-500">Nenhum dado.</td></tr>`; return; }
+
+            data.forEach((p, index) => {
+                let monthsHTML = '';
+                p.months.forEach((val, idx) => {
+                    const goal = monthlyGoals[idx];
+                    let badgeClass = 'bg-none'; let content = '';
+                    if (p.birthdayMonth == idx) {
+                        badgeClass = 'bg-birthday'; content = '<i class="ph ph-cake text-base"></i>';
+                        if (val > 0) content += ` <span class="text-[9px]">${val}</span>`;
+                    } else {
+                        if (goal > 0) {
+                             if (val >= goal) badgeClass = 'bg-paid'; else if (val > 0) badgeClass = 'bg-partial'; else badgeClass = 'bg-missed';
+                        } else {
+                             if (val > 0) badgeClass = 'bg-paid'; else badgeClass = 'bg-none';
+                        }
+                        content = val > 0 ? (Number.isInteger(val) ? val : val.toFixed(0)) : '-';
+                    }
+                    monthsHTML += `<td class="p-1 text-center align-middle"><span class="status-badge ${badgeClass}">${content}</span></td>`;
+                });
+
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-slate-700 transition border-b border-slate-700 last:border-0 group';
+                
+                let avatarHTML = p.photo ? `<div class="w-8 h-8 rounded-full overflow-hidden border-2 border-slate-600 flex-shrink-0 bg-slate-800"><img src="${p.photo}" class="profile-pic"></div>` : `<div class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-[10px] text-slate-300 border border-slate-600 font-bold shadow-sm flex-shrink-0">${p.name.charAt(0)}</div>`;
+                
+                const fineDisplay = (p.fine||0) > 0 ? `<span class="text-rose-400 font-bold" title="Dívida">R$${p.fine}</span>` : '-';
+                const extraDisplay = (p.extra||0) > 0 ? `<span class="text-indigo-400 font-bold">+R$${p.extra}</span>` : '-';
+                
+                // Botão Editar (Só Admin vê)
+                const editBtn = currentUserRole === 'admin' 
+                    ? `<button onclick="openEditModal(${index})" class="text-indigo-400 hover:text-white p-1.5 rounded hover:bg-indigo-600 transition shadow-sm"><i class="ph ph-pencil-simple text-lg"></i></button>`
+                    : ``;
+
+                row.innerHTML = `
+                    <td class="p-2 sticky-col z-20 font-medium text-white shadow-lg whitespace-nowrap cursor-pointer group-hover:text-indigo-400 transition-colors flex items-center gap-3 pl-4" ${currentUserRole === 'admin' ? `onclick="openEditModal(${index})"` : ''}>${avatarHTML} ${p.name}</td>
+                    ${monthsHTML}
+                    <td class="p-1 text-center align-middle bg-rose-900/10 border-l border-rose-900/20 text-xs">${fineDisplay}</td>
+                    <td class="p-1 text-center align-middle bg-indigo-900/10 border-l border-indigo-900/20 text-xs">${extraDisplay}</td>
+                    <td class="p-2 text-right align-middle bg-slate-800/50 font-mono font-medium text-emerald-400 text-xs">R$ ${(p.totalPaid).toFixed(0)}</td>
+                    <td class="p-2 text-right align-middle bg-slate-800/50 border-r border-slate-700 font-mono font-medium ${p.missing > 0 ? 'text-rose-400' : 'text-slate-600'} text-xs">R$ ${p.missing.toFixed(0)}</td>
+                    <td class="p-2 text-center align-middle sticky right-0 bg-slate-800 z-10 border-l border-slate-700 shadow-[-5px_0_10px_rgba(0,0,0,0.2)] admin-only">${editBtn}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // --- EDIT MODAL ---
+        function openEditModal(index) {
+            const p = participantsData[index]; if(!p) return;
+            tempEditPhotoBase64 = '';
+            document.getElementById('modalParticipantName').innerText = p.name;
+            const imgEl = document.getElementById('modalAvatarImg'); const txtEl = document.getElementById('modalAvatarText');
+            if (p.photo) { imgEl.src = p.photo; imgEl.classList.remove('hidden'); txtEl.classList.add('hidden'); } else { imgEl.classList.add('hidden'); txtEl.classList.remove('hidden'); txtEl.innerText = p.name.charAt(0); }
+            
+            document.getElementById('editParticipantIndex').value = index;
+            document.getElementById('editFineValue').value = p.fine || 0;
+            document.getElementById('editExtraValue').value = p.extra || 0;
+            document.getElementById('editBirthdayMonth').value = (p.birthdayMonth === undefined || p.birthdayMonth === null) ? -1 : p.birthdayMonth;
+
+            const container = document.getElementById('editMonthsContainer'); container.innerHTML = '';
+            p.months.forEach((val, idx) => {
+                const div = document.createElement('div'); div.className = "bg-slate-900 border border-slate-700 rounded p-2 flex flex-col items-center";
+                div.innerHTML = `<label class="text-[10px] uppercase text-slate-500 font-bold mb-1">${MONTHS_ABBR[idx]}</label><input type="number" id="edit-month-${idx}" value="${val}" class="bg-transparent text-white text-center font-mono focus:outline-none border-b border-transparent focus:border-indigo-500 transition-colors w-full">`;
+                container.appendChild(div);
+            });
+            document.getElementById('editPaymentModal').classList.remove('hidden'); document.getElementById('editPaymentModal').classList.add('flex');
+        }
+
+        function closeEditModal() { document.getElementById('editPaymentModal').classList.add('hidden'); document.getElementById('editPaymentModal').classList.remove('flex'); }
+
+        async function saveEditModal() {
+            const index = document.getElementById('editParticipantIndex').value; const p = participantsData[index];
+            const oldTotalPaidMonths = p.months.reduce((a,b)=>a+b,0);
+            for(let i=0; i<12; i++) { p.months[i] = parseFloat(document.getElementById(`edit-month-${i}`).value) || 0; }
+            p.fine = parseFloat(document.getElementById('editFineValue').value) || 0;
+            p.extra = parseFloat(document.getElementById('editExtraValue').value) || 0;
+            const bMonth = parseInt(document.getElementById('editBirthdayMonth').value);
+            p.birthdayMonth = bMonth === -1 ? null : bMonth;
+            if (tempEditPhotoBase64) p.photo = tempEditPhotoBase64;
+
+            // Auto-multa ao salvar
+            const parts = fineConfig.deadline.split('/'); const deadlineDate = new Date(parts[2], parts[1] - 1, parts[0]); deadlineDate.setHours(23, 59, 59, 999);
+            const today = new Date();
+            if (today > deadlineDate && p.fine === 0 && oldTotalPaidMonths < fineConfig.threshold) {
+                 if(confirm(`ATENÇÃO: Prazo vencido. Aplicar multa de R$ ${fineConfig.value}?`)) p.fine = fineConfig.value;
+            }
+
+            calculateTotalsAndRender();
+            saveToSupabase(); // Salva na nuvem
+            closeEditModal();
+        }
+
+        // --- ADMIN / CONFIG ---
+        function renderMonthlyGoalsInputs() {
+            const container = document.getElementById('monthlyGoalsContainer'); container.innerHTML = '';
+            monthlyGoals.forEach((val, idx) => {
+                const div = document.createElement('div'); div.className = "bg-slate-900 p-2 rounded border border-slate-700 flex flex-col";
+                div.innerHTML = `<label class="text-[10px] uppercase text-slate-500 font-bold mb-1">${MONTHS_ABBR[idx]}</label><div class="flex items-center"><span class="text-xs text-slate-500 mr-1">R$</span><input type="number" id="goal-${idx}" value="${val}" onchange="updateTotalAnnualGoalUI()" class="bg-transparent text-white text-sm w-full font-mono focus:outline-none"></div>`;
+                container.appendChild(div);
+            });
+        }
+        function updateTotalAnnualGoalUI() {
+            let total = 0; document.querySelectorAll('[id^="goal-"]').forEach(i => total += parseFloat(i.value) || 0);
+            document.getElementById('totalAnnualGoal').innerText = `R$ ${total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+        }
+        function saveMonthlyGoals() {
+            document.querySelectorAll('[id^="goal-"]').forEach((i, idx) => monthlyGoals[idx] = parseFloat(i.value) || 0);
+            calculateTotalsAndRender(); saveToSupabase(); alert("Metas salvas!");
+        }
+        function saveFineConfig() {
+            fineConfig.deadline = document.getElementById('fineDeadline').value;
+            fineConfig.threshold = parseFloat(document.getElementById('fineThreshold').value);
+            fineConfig.value = parseFloat(document.getElementById('fineValue').value);
+            saveToSupabase();
+        }
+        
+        function renderAdminUserList() {
+            const tbody = document.getElementById('adminUsersTableBody'); tbody.innerHTML = '';
+            participantsData.forEach((p, index) => {
+                const row = document.createElement('tr'); row.className = "hover:bg-slate-800 transition border-b border-slate-700 last:border-0";
+                row.innerHTML = `<td class="p-2 pl-4 text-white font-medium">${p.name}</td><td class="p-2 text-right font-mono text-emerald-400 text-xs">R$ ${p.totalPaid}</td><td class="p-2 text-center"><button onclick="removeParticipant(${index})" class="text-rose-400 hover:text-white hover:bg-rose-600 p-1.5 rounded transition"><i class="ph ph-trash"></i></button></td>`;
+                tbody.appendChild(row);
+            });
+        }
+        async function addParticipant() {
+            const name = document.getElementById('newUserName').value.trim(); if (!name) return;
+            const bMonth = document.getElementById('newUserBirthday').value === "" ? null : parseInt(document.getElementById('newUserBirthday').value);
+            participantsData.push({ id: Date.now(), name: name, months: Array(12).fill(0), extra: 0, fine: 0, totalPaid: 0, missing: 0, photo: tempAddPhotoBase64 || '', birthdayMonth: bMonth });
+            document.getElementById('newUserName').value = ''; tempAddPhotoBase64 = '';
+            calculateTotalsAndRender(); saveToSupabase(); renderAdminUserList();
+        }
+        function removeParticipant(idx) { if(confirm("Remover?")) { participantsData.splice(idx, 1); calculateTotalsAndRender(); saveToSupabase(); renderAdminUserList(); } }
+
+        function checkAndApplyFinesAutomatic() {
+            // Lógica de auditoria ao iniciar (opcionalmente silenciosa ou só alerta o admin)
+        }
+        function manualFineCheck() {
+            const parts = fineConfig.deadline.split('/'); const deadlineDate = new Date(parts[2], parts[1] - 1, parts[0]); deadlineDate.setHours(23, 59, 59, 999);
+            const today = new Date();
+            if (today <= deadlineDate && !confirm(`Data limite (${fineConfig.deadline}) ainda não chegou. Aplicar mesmo assim?`)) return;
+            let count = 0;
+            participantsData.forEach(p => { 
+                const mPaid = p.months.reduce((a,b)=>a+b,0);
+                if (mPaid < fineConfig.threshold && (p.fine||0) === 0) { p.fine = fineConfig.value; count++; } 
+            });
+            calculateTotalsAndRender(); saveToSupabase();
+            document.getElementById('fineFeedback').innerText = `${count} multas aplicadas.`;
+        }
+
+        // UTILS
+        function switchTab(tabName) {
+            if(tabName === 'admin' && currentUserRole !== 'admin') { alert("Acesso negado."); return; }
+            document.getElementById('view-dashboard').classList.add('hidden'); document.getElementById('view-admin').classList.add('hidden');
+            document.getElementById('btn-dashboard').classList.remove('active'); document.getElementById('btn-admin').classList.remove('active');
+            document.getElementById('view-' + tabName).classList.remove('hidden'); document.getElementById('btn-' + tabName).classList.add('active');
+            if(tabName === 'admin') renderAdminUserList();
+        }
+        function initDatePickers() { flatpickr("#fineDeadline", { dateFormat: "d/m/Y", locale: "pt", defaultDate: fineConfig.deadline, theme: "dark", onChange: (d, s) => { fineConfig.deadline = s; saveToSupabase(); } }); }
+        function loadDemoData() { participantsData = [{ id: 1, name: 'Exemplo', months: [0,0,30,30,30,30,30,30,30,30,55,55], extra: 0, fine: 0, birthdayMonth: 8, photo: '' }]; calculateTotalsAndRender(); }
+        function readFileAsBase64(file) { return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(file); }); }
+        async function previewAddUserImage(input) { if (input.files[0]) { tempAddPhotoBase64 = await readFileAsBase64(input.files[0]); document.getElementById('newUserPhotoName').classList.remove('hidden'); input.parentElement.classList.add('bg-emerald-600'); } }
+        async function previewEditUserImage(input) { if (input.files[0]) { tempEditPhotoBase64 = await readFileAsBase64(input.files[0]); document.getElementById('modalAvatarImg').src = tempEditPhotoBase64; document.getElementById('modalAvatarImg').classList.remove('hidden'); document.getElementById('modalAvatarText').classList.add('hidden'); } }
+        document.getElementById('searchInput').addEventListener('keyup', (e) => { const term = e.target.value.toLowerCase(); renderTable(participantsData.filter(p => p.name.toLowerCase().includes(term))); });
+    </script>
+</body>
+</html>
