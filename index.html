@@ -100,7 +100,6 @@
     <div id="loadingOverlay" class="hidden">
         <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-white mb-4"></div>
         <p class="animate-pulse">Conectando ao banco de dados...</p>
-        <p class="text-xs text-slate-400 mt-2" id="loadingText">Aguarde...</p>
     </div>
 
     <!-- LOGIN -->
@@ -179,7 +178,9 @@
                                 <th class="p-1 text-center w-14">Abr</th><th class="p-1 text-center w-14">Mai</th><th class="p-1 text-center w-14">Jun</th>
                                 <th class="p-1 text-center w-14">Jul</th><th class="p-1 text-center w-14">Ago</th><th class="p-1 text-center w-14">Set</th>
                                 <th class="p-1 text-center w-14">Out</th><th class="p-1 text-center w-14">Nov</th><th class="p-1 text-center w-14">Dez</th>
+                                <!-- Multa (Dívida) -->
                                 <th class="p-1 text-center bg-rose-900/10 border-l border-rose-900/20 text-rose-400 min-w-[50px]" title="Valor da Multa (A Pagar)">Multa</th>
+                                <!-- Extra (Pagamento) -->
                                 <th class="p-1 text-center bg-indigo-900/10 border-l border-indigo-900/20 text-indigo-400 min-w-[50px]" title="Valor Extra (Pago)">Extra</th>
                                 <th class="p-2 text-right bg-slate-800/50 min-w-[80px]">Total</th>
                                 <th class="p-2 text-right bg-slate-800/50 border-r border-slate-700 min-w-[80px]">Falta</th>
@@ -297,12 +298,14 @@
     </div>
 
     <script>
-        // === CONFIGURAÇÕES SUPABASE ===
-        // Usando a chave correta para o projeto wkvwrtwovcfnvfgleslq
+        // CONFIGURAÇÕES SUPABASE
         const SUPABASE_URL = 'https://wkvwrtwovcfnvfgleslq.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndrdndydHdvdmNmbnZmZ2xlc2xxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzNTE2MTQsImV4cCI6MjA2NzkyNzYxNH0.osy_C1SsPJ7t8BJlri7DpVDJU64S_IfRzy9KEBP9VMY';
         
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        // Evitar conflito de variavel global
+        console.log("Iniciando DB...");
+        const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        console.log("DB Conectado!");
 
         // VARIÁVEIS GLOBAIS
         const MONTHS_ABBR = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
@@ -318,17 +321,9 @@
             e.preventDefault();
             const user = document.getElementById('loginUser').value;
             const pass = document.getElementById('loginPass').value;
-            const errorMsg = document.getElementById('loginError');
-
-            if (user === 'admin' && pass === 'Admin2026') { 
-                currentUserRole = 'admin'; 
-                enterSystem(); 
-            } else if (user === 'Natal' && pass === '2026') { 
-                currentUserRole = 'user'; 
-                enterSystem(); 
-            } else { 
-                errorMsg.innerText = "Usuário ou senha incorretos."; 
-            }
+            if (user === 'admin' && pass === 'Admin2026') { currentUserRole = 'admin'; enterSystem(); }
+            else if (user === 'Natal' && pass === '2026') { currentUserRole = 'user'; enterSystem(); }
+            else { document.getElementById('loginError').innerText = "Dados incorretos."; }
         }
 
         function enterSystem() {
@@ -346,8 +341,8 @@
         async function loadFromSupabase() {
             showLoading(true);
             try {
-                // Tenta carregar do Supabase com timeout de 2s para não travar
-                const fetchPromise = supabase.from('natal_2026').select('conteudo').eq('id', 1).single();
+                // Timeout para evitar travamento
+                const fetchPromise = db.from('natal_2026').select('conteudo').eq('id', 1).single();
                 const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 2000));
 
                 try {
@@ -357,10 +352,14 @@
                         participantsData = data.conteudo.participants || [];
                         monthlyGoals = data.conteudo.goals || monthlyGoals;
                         fineConfig = data.conteudo.fine || fineConfig;
+                        console.log("Dados carregados da Nuvem.");
+                    } else {
+                        console.log("Nenhum dado encontrado na nuvem, usando local/demo.");
+                        loadFromLocal(); 
                     }
                 } catch (e) {
-                    console.warn("Usando modo offline/local devido a erro ou timeout na nuvem.");
-                    loadFromLocal(); // Fallback para local
+                    console.warn("Erro/Timeout Nuvem -> Modo Local Ativado");
+                    loadFromLocal(); 
                 }
 
                 // Atualiza UI
@@ -392,7 +391,11 @@
 
             // Salva Nuvem
             const payload = { participants: participantsData, goals: monthlyGoals, fine: fineConfig };
-            await supabase.from('natal_2026').upsert({ id: 1, tipo: 'dados_gerais', conteudo: payload });
+            try {
+                await db.from('natal_2026').upsert({ id: 1, tipo: 'dados_gerais', conteudo: payload });
+            } catch (e) {
+                console.error("Erro ao salvar na nuvem:", e);
+            }
             showLoading(false);
         }
 
@@ -507,7 +510,8 @@
             if(tempEditPhotoBase64) p.photo = tempEditPhotoBase64;
             // Auto Fine Logic on Save
             const d = fineConfig.deadline.split('/'); const dd = new Date(d[2],d[1]-1,d[0]); dd.setHours(23,59,59);
-            if (new Date() > dd && p.fine === 0 && oldM < fineConfig.threshold) {
+            const today = new Date();
+            if (today > dd && p.fine === 0 && oldM < fineConfig.threshold) {
                  if(confirm(`Prazo vencido (${fineConfig.deadline}). Aplicar multa de R$ ${fineConfig.value}?`)) p.fine = fineConfig.value;
             }
             calculateTotalsAndRender(); saveToSupabase(); closeEditModal();
