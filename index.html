@@ -90,8 +90,14 @@
         tr:hover td.sticky-col { background-color: #334155; }
         .profile-pic { object-fit: cover; width: 100%; height: 100%; }
 
-        #loadingOverlay { background: rgba(15, 23, 42, 0.95); z-index: 200; position: fixed; inset: 0; display: flex; justify-content: center; align-items: center; color: white; flex-direction: column; }
+        #loadingOverlay { background: rgba(15, 23, 42, 0.98); z-index: 200; position: fixed; inset: 0; display: flex; justify-content: center; align-items: center; color: white; flex-direction: column; transition: opacity 0.3s; }
         body.role-user .admin-only { display: none !important; }
+        
+        .status-dot {
+            width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px;
+        }
+        .status-dot.online { background-color: #22c55e; box-shadow: 0 0 5px #22c55e; }
+        .status-dot.offline { background-color: #f59e0b; }
     </style>
 </head>
 <body class="flex flex-col min-h-screen">
@@ -99,8 +105,8 @@
     <!-- Loading -->
     <div id="loadingOverlay" class="hidden">
         <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-white mb-4"></div>
-        <p class="animate-pulse">Conectando ao banco de dados...</p>
-        <p class="text-xs text-slate-400 mt-2">(Se demorar, o modo offline será ativado)</p>
+        <p class="animate-pulse">Acedendo ao sistema...</p>
+        <p class="text-xs text-slate-500 mt-2" id="loadingText">Sincronizando com a Nuvem...</p>
     </div>
 
     <!-- LOGIN -->
@@ -153,10 +159,15 @@
     <!-- Conteúdo -->
     <main id="mainContent" class="hidden flex-grow p-4 sm:p-6 w-full max-w-7xl mx-auto space-y-6">
         
+        <!-- Status Bar -->
+        <div class="text-right text-xs text-slate-500">
+            <span id="connectionStatus"><span class="status-dot"></span> Conectando...</span>
+        </div>
+
         <!-- DASHBOARD -->
         <div id="view-dashboard" class="fade-in space-y-6">
             <div class="flex flex-col sm:flex-row justify-between items-end sm:items-center gap-4">
-                <div><h2 class="text-xl font-bold text-white">Visão Geral</h2><p class="text-sm text-slate-400">Status financeiro de 2026</p></div>
+                <div><h2 class="text-xl font-bold text-white">Visão Geral Financeira</h2><p class="text-sm text-slate-400">Status financeiro de 2026</p></div>
                 <div class="flex gap-3 admin-only">
                     <button onclick="resetData()" class="text-xs text-rose-400 hover:text-rose-300 font-medium px-3 py-2 border border-rose-900 rounded hover:bg-rose-900/20 transition flex items-center gap-2"><i class="ph ph-trash"></i> Resetar</button>
                     <label class="cursor-pointer bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300 px-4 py-2 rounded text-xs font-bold uppercase transition flex items-center gap-2"><i class="ph ph-file-csv text-green-400 text-lg"></i> Importar CSV<input type="file" id="csvInput" accept=".csv" class="hidden"></label>
@@ -299,14 +310,22 @@
     </div>
 
     <script>
-        // CONFIGURAÇÕES SUPABASE CORRETAS (URL E KEY PUBLIC)
-        const SUPABASE_URL = 'https://nctjowqvtbejbipxhhd.supabase.co'; 
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5jdGpvd3F1YnRmYmVqaXB4aGhkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODk1NjYsImV4cCI6MjA4Mjk2NTU2Nn0.63GaaShzKx0oO6n4ci0Rj3onmenYycjcE0EN7vVvErE';
+        // CONFIGURAÇÕES SUPABASE CORRETAS
+        const SUPABASE_URL = 'https://nctjowqvtbejbipxhhd.supabase.co'; // <--- URL CORRETA DO PROJETO nctjowqvtbejbipxhhd
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5jdGpvd3F1YnRmYmVqaXB4aGhkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODk1NjYsImV4cCI6MjA4Mjk2NTU2Nn0.63GaaShzKx0oO6n4ci0Rj3onmenYycjcE0EN7vVvErE'; // <--- CHAVE ANON PÚBLICA CORRETA
         
-        // Inicializa conexão sem conflito de variável global
-        console.log("Iniciando DB...");
-        const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        console.log("DB Conectado!");
+        let supabase = null;
+        let dbMode = 'local'; // 'cloud' ou 'local'
+
+        function initSupabase() {
+            try {
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                console.log("Supabase Client Init OK");
+            } catch (e) {
+                console.error("Erro ao criar client Supabase", e);
+            }
+        }
+        initSupabase();
 
         // VARIÁVEIS GLOBAIS
         const MONTHS_ABBR = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
@@ -336,45 +355,53 @@
         }
 
         function handleLogout() { location.reload(); }
-        function initSystem() { initDatePickers(); loadFromSupabase(); }
+        function initSystem() { initDatePickers(); loadData(); }
 
-        // === BANCO DE DADOS (SUPABASE) ===
-        async function loadFromSupabase() {
+        // === LÓGICA HÍBRIDA DE DADOS ===
+        async function loadData() {
             showLoading(true);
+            document.getElementById('loadingText').innerText = "Sincronizando...";
+
+            // Tenta conectar na nuvem com timeout de 3s
+            const cloudPromise = new Promise(async (resolve, reject) => {
+                if(!supabase) return reject("No client");
+                const { data, error } = await supabase.from('natal_2026').select('conteudo').eq('id', 1).single();
+                if(error && error.code !== 'PGRST116') reject(error);
+                resolve(data);
+            });
+
+            const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject("timeout"), 2500));
+
             try {
-                // Timeout para evitar travamento se a chave estiver errada
-                const fetchPromise = db.from('natal_2026').select('conteudo').eq('id', 1).single();
-                const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 2000));
-
-                try {
-                    const { data, error } = await Promise.race([fetchPromise, timeoutPromise]);
-                    
-                    if (data && data.conteudo) {
-                        participantsData = data.conteudo.participants || [];
-                        monthlyGoals = data.conteudo.goals || monthlyGoals;
-                        fineConfig = data.conteudo.fine || fineConfig;
-                        console.log("Dados carregados da Nuvem.");
-                    } else {
-                        console.log("Nenhum dado encontrado na nuvem, usando local/demo.");
-                        loadFromLocal(); 
-                    }
-                } catch (e) {
-                    console.warn("Erro/Timeout Nuvem -> Modo Local Ativado");
-                    loadFromLocal(); 
+                const data = await Promise.race([cloudPromise, timeoutPromise]);
+                if (data && data.conteudo) {
+                    participantsData = data.conteudo.participants || [];
+                    monthlyGoals = data.conteudo.goals || monthlyGoals;
+                    fineConfig = data.conteudo.fine || fineConfig;
+                    dbMode = 'cloud';
+                    updateStatus('online');
+                } else {
+                    // Não achou nada na nuvem, tenta local
+                    loadFromLocal();
+                    dbMode = 'cloud'; // Assume que vai salvar na nuvem depois
                 }
+            } catch (e) {
+                console.warn("Falha na nuvem, usando modo offline:", e);
+                loadFromLocal();
+                dbMode = 'local';
+                updateStatus('offline');
+            }
 
-                // Atualiza UI
-                renderMonthlyGoalsInputs();
-                updateTotalAnnualGoalUI();
-                document.getElementById('fineThreshold').value = fineConfig.threshold;
-                document.getElementById('fineValue').value = fineConfig.value;
-                if(document.getElementById('fineDeadline')._flatpickr) {
-                     document.getElementById('fineDeadline')._flatpickr.setDate(fineConfig.deadline);
-                }
-
-                calculateTotalsAndRender();
-
-            } catch (err) { console.error(err); } finally { showLoading(false); }
+            // Atualiza UI
+            renderMonthlyGoalsInputs();
+            updateTotalAnnualGoalUI();
+            document.getElementById('fineThreshold').value = fineConfig.threshold;
+            document.getElementById('fineValue').value = fineConfig.value;
+            if(document.getElementById('fineDeadline')._flatpickr) {
+                    document.getElementById('fineDeadline')._flatpickr.setDate(fineConfig.deadline);
+            }
+            calculateTotalsAndRender();
+            showLoading(false);
         }
 
         function loadFromLocal() {
@@ -384,26 +411,36 @@
             if(g) monthlyGoals = JSON.parse(g);
         }
 
-        async function saveToSupabase() {
-            showLoading(true);
-            // Salva Local
+        async function saveData() {
+            // Salva Local (Sempre)
             localStorage.setItem('natal2026_data', JSON.stringify(participantsData));
             localStorage.setItem('natal2026_goals', JSON.stringify(monthlyGoals));
 
-            // Salva Nuvem
-            const payload = { participants: participantsData, goals: monthlyGoals, fine: fineConfig };
-            try {
-                await db.from('natal_2026').upsert({ id: 1, tipo: 'dados_gerais', conteudo: payload });
-            } catch (e) {
-                console.error("Erro ao salvar na nuvem:", e);
+            // Salva Nuvem (Se possível)
+            if(supabase) {
+                const payload = { participants: participantsData, goals: monthlyGoals, fine: fineConfig };
+                // Não await para não travar a UI
+                supabase.from('natal_2026').upsert({ id: 1, tipo: 'dados_gerais', conteudo: payload })
+                    .then(({ error }) => {
+                        if(error) { console.error("Erro nuvem", error); updateStatus('offline'); }
+                        else { updateStatus('online'); }
+                    });
             }
-            showLoading(false);
+        }
+
+        function updateStatus(status) {
+            const el = document.getElementById('connectionStatus');
+            if(el) {
+                el.innerHTML = status === 'online' 
+                    ? '<span class="status-dot online"></span> Online (Nuvem)' 
+                    : '<span class="status-dot offline"></span> Offline (Local)';
+            }
         }
 
         function resetData() {
             if(confirm("ATENÇÃO: Apagar TODOS os dados?")) {
                  participantsData = []; monthlyGoals = [0,0,0,0,0,0,0,0,0,0,0,0];
-                 calculateTotalsAndRender(); saveToSupabase();
+                 calculateTotalsAndRender(); saveData();
             }
         }
         function showLoading(show) { document.getElementById('loadingOverlay').classList.toggle('hidden', !show); }
@@ -520,7 +557,7 @@
                  }
             }
 
-            calculateTotalsAndRender(); saveToSupabase(); closeEditModal();
+            calculateTotalsAndRender(); saveData(); closeEditModal();
         }
 
         // ADMIN
@@ -529,8 +566,8 @@
             monthlyGoals.forEach((val, idx) => c.innerHTML += `<div class="bg-slate-900 p-2 rounded border border-slate-700 flex flex-col"><label class="text-[10px] uppercase text-slate-500 font-bold mb-1">${MONTHS_ABBR[idx]}</label><div class="flex items-center"><span class="text-xs text-slate-500 mr-1">R$</span><input type="number" id="goal-${idx}" value="${val}" onchange="updateTotalAnnualGoalUI()" class="bg-transparent text-white text-sm w-full font-mono focus:outline-none"></div></div>`);
         }
         function updateTotalAnnualGoalUI() { let t=0; document.querySelectorAll('[id^="goal-"]').forEach(i=>t+=parseFloat(i.value)||0); document.getElementById('totalAnnualGoal').innerText = `R$ ${t.toLocaleString('pt-BR',{minimumFractionDigits:2})}`; }
-        function saveMonthlyGoals() { document.querySelectorAll('[id^="goal-"]').forEach((i,x)=>monthlyGoals[x]=parseFloat(i.value)||0); calculateTotalsAndRender(); saveToSupabase(); alert("Metas salvas!"); }
-        function saveFineConfig() { fineConfig.deadline=document.getElementById('fineDeadline').value; fineConfig.threshold=parseFloat(document.getElementById('fineThreshold').value); fineConfig.value=parseFloat(document.getElementById('fineValue').value); saveToSupabase(); }
+        function saveMonthlyGoals() { document.querySelectorAll('[id^="goal-"]').forEach((i,x)=>monthlyGoals[x]=parseFloat(i.value)||0); calculateTotalsAndRender(); saveData(); alert("Metas salvas!"); }
+        function saveFineConfig() { fineConfig.deadline=document.getElementById('fineDeadline').value; fineConfig.threshold=parseFloat(document.getElementById('fineThreshold').value); fineConfig.value=parseFloat(document.getElementById('fineValue').value); saveData(); }
         function renderAdminUserList() {
             const tb = document.getElementById('adminUsersTableBody'); tb.innerHTML='';
             participantsData.forEach((p,i)=> tb.innerHTML+=`<tr class="hover:bg-slate-800 transition border-b border-slate-700 last:border-0"><td class="p-2 pl-4 text-white font-medium">${p.name}</td><td class="p-2 text-right font-mono text-emerald-400 text-xs">R$ ${p.totalPaid}</td><td class="p-2 text-center"><button onclick="removeParticipant(${i})" class="text-rose-400 hover:text-white hover:bg-rose-600 p-1.5 rounded transition"><i class="ph ph-trash"></i></button></td></tr>`);
@@ -540,26 +577,26 @@
             const b = document.getElementById('newUserBirthday').value;
             participantsData.push({ id: Date.now(), name: n, months: Array(12).fill(0), extra: 0, fine: 0, totalPaid: 0, missing: 0, photo: tempAddPhotoBase64||'', birthdayMonth: b===""?null:parseInt(b) });
             document.getElementById('newUserName').value=''; tempAddPhotoBase64=''; 
-            calculateTotalsAndRender(); saveToSupabase(); renderAdminUserList();
+            calculateTotalsAndRender(); saveData(); renderAdminUserList();
         }
-        function removeParticipant(i) { if(confirm("Remover?")) { participantsData.splice(i,1); calculateTotalsAndRender(); saveToSupabase(); renderAdminUserList(); } }
+        function removeParticipant(i) { if(confirm("Remover?")) { participantsData.splice(i,1); calculateTotalsAndRender(); saveData(); renderAdminUserList(); } }
         function checkAndApplyFinesAutomatic() {
             const d = fineConfig.deadline.split('/'); const dd = new Date(d[2],d[1]-1,d[0]); dd.setHours(23,59,59);
             if(new Date() > dd) {
                 let c=0; participantsData.forEach(p => { const m = p.months.reduce((a,b)=>a+b,0); if(m < fineConfig.threshold && (p.fine||0) === 0) { p.fine = fineConfig.value; c++; } });
-                if(c>0) { calculateTotalsAndRender(); saveToSupabase(); }
+                if(c>0) { calculateTotalsAndRender(); saveData(); }
             }
         }
         function manualFineCheck() {
             const d = fineConfig.deadline.split('/'); const dd = new Date(d[2],d[1]-1,d[0]); dd.setHours(23,59,59);
             if(new Date()<=dd && !confirm(`Prazo (${fineConfig.deadline}) não venceu. Aplicar?`)) return;
             let c=0; participantsData.forEach(p => { const m = p.months.reduce((a,b)=>a+b,0); if(m < fineConfig.threshold && (p.fine||0) === 0) { p.fine = fineConfig.value; c++; } });
-            calculateTotalsAndRender(); saveToSupabase(); document.getElementById('fineFeedback').innerText = `${c} aplicadas.`;
+            calculateTotalsAndRender(); saveData(); document.getElementById('fineFeedback').innerText = `${c} aplicadas.`;
         }
 
         // UTILS
         function switchTab(t) { if(t==='admin'&&currentUserRole!=='admin')return; document.getElementById('view-dashboard').classList.add('hidden'); document.getElementById('view-admin').classList.add('hidden'); document.getElementById('btn-dashboard').classList.remove('active'); document.getElementById('btn-admin').classList.remove('active'); document.getElementById('view-'+t).classList.remove('hidden'); document.getElementById('btn-'+t).classList.add('active'); if(t==='admin') renderAdminUserList(); }
-        function initDatePickers() { flatpickr("#fineDeadline", { dateFormat: "d/m/Y", locale: "pt", defaultDate: fineConfig.deadline, theme: "dark", onChange: (d,s) => { fineConfig.deadline=s; saveToSupabase(); } }); }
+        function initDatePickers() { flatpickr("#fineDeadline", { dateFormat: "d/m/Y", locale: "pt", defaultDate: fineConfig.deadline, theme: "dark", onChange: (d,s) => { fineConfig.deadline=s; saveData(); } }); }
         function readFileAsBase64(f) { return new Promise((res,rej)=>{const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(f);}); }
         async function previewAddUserImage(i) { if(i.files[0]) { tempAddPhotoBase64=await readFileAsBase64(i.files[0]); document.getElementById('newUserPhotoName').classList.remove('hidden'); i.parentElement.classList.add('bg-emerald-600'); } }
         async function previewEditUserImage(i) { if(i.files[0]) { tempEditPhotoBase64=await readFileAsBase64(i.files[0]); document.getElementById('modalAvatarImg').src=tempEditPhotoBase64; document.getElementById('modalAvatarImg').classList.remove('hidden'); document.getElementById('modalAvatarText').classList.add('hidden'); } }
@@ -574,7 +611,7 @@
                  let mv = [0,0]; mIdxs.forEach(x => { mv.push(x!==-1?(parseFloat(c[x])||0):0); });
                  newData.push({ id: i, name: c[nIdx], months: mv, extra: parseFloat(c[eIdx])||0, fine: 0, totalPaid: 0, missing: 0, photo: '', birthdayMonth: null });
              }
-             participantsData = newData; calculateTotalsAndRender(); saveToSupabase(); alert("Importado!");
+             participantsData = newData; calculateTotalsAndRender(); saveData(); alert("Importado!");
         }
     </script>
 </body>
