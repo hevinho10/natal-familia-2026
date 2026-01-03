@@ -172,61 +172,6 @@
             .mini-pill { padding: 10px 12px !important; }
         }
 
-/* ====== Santa runner (progresso) ====== */
-.santa-track { position: relative; }
-.santa-runner {
-  position: absolute;
-  top: 50%;
-  left: 0%;
-  transform: translate(-50%, -65%);
-  width: 42px;
-  height: 42px;
-  pointer-events: none;
-  transition: left 1000ms ease;
-  filter: drop-shadow(0 6px 10px rgba(0,0,0,.35));
-  animation: santaBob 900ms ease-in-out infinite;
-}
-.santa-destination {
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-55%);
-  width: 34px;
-  height: 34px;
-  pointer-events: none;
-  opacity: .9;
-  filter: drop-shadow(0 6px 10px rgba(0,0,0,.25));
-}
-@keyframes santaBob {
-  0%,100% { transform: translate(-50%, -65%) translateY(0); }
-  50% { transform: translate(-50%, -65%) translateY(-2px); }
-}
-
-/* ====== Gift fill (status de quitação) ====== */
-.gift-wrap { width: 190px; height: 190px; }
-.gift-svg { width: 100%; height: 100%; }
-
-.gift-wave-1 { animation: waveMove 3.5s linear infinite; opacity: .95; }
-.gift-wave-2 { animation: waveMove 5.5s linear infinite reverse; opacity: .55; }
-
-@keyframes waveMove {
-  from { transform: translateX(0); }
-  to   { transform: translateX(-48px); }
-}
-
-/* SVG transform compatibility */
-.gift-wave-1, .gift-wave-2 {
-  transform-box: fill-box;
-  transform-origin: center;
-}
-
-/* Mobile: reduz */
-@media (max-width: 640px) {
-  .santa-runner { width: 34px; height: 34px; transform: translate(-50%, -70%); }
-  .santa-destination { width: 28px; height: 28px; }
-  .gift-wrap { width: 160px; height: 160px; }
-}
-
 </style>
 </head>
 <body class="flex flex-col min-h-screen">
@@ -364,7 +309,7 @@
                                 <!-- Coluna Multa (Dívida) -->
                                 <th class="p-2 text-center bg-rose-900/10 border-l border-rose-900/20 text-rose-400 min-w-[60px] col-multa" title="Dívida de Multa">Multa</th>
                                 <!-- Coluna Extra (Pagamento) -->
-                                <th class="p-2 text-center bg-indigo-900/10 border-l border-indigo-900/20 text-indigo-400 min-w-[60px] extra-col extra-col" title="Valor Extra Pago">Extra</th>
+                                <th class="p-2 text-center bg-indigo-900/10 border-l border-indigo-900/20 text-indigo-400 min-w-[60px] extra-col" title="Valor Extra Pago">Extra</th>
                                 <th class="p-2 text-right bg-slate-800/50 min-w-[90px] col-total col-total">Total Pago</th>
                                 <th class="p-2 text-right bg-slate-800/50 border-r border-slate-700 min-w-[90px] col-falta col-falta">Falta</th>
                                 <th id="editColHead" class="p-2 text-center sticky right-0 bg-slate-900 z-10 w-16 shadow-[-5px_0_10px_rgba(0,0,0,0.2)]">Editar</th>
@@ -384,65 +329,17 @@
                     <h3 class="text-sm font-bold text-slate-400 w-full mb-4 flex items-center gap-2 border-b border-slate-700 pb-2">
                         <i class="ph ph-chart-donut text-indigo-400"></i> Status de Quitação
                     </h3>
-                    <div class="gift-wrap relative my-4">
-    <svg class="gift-svg" viewBox="0 0 160 160">
-        <defs>
-            <linearGradient id="giftFillGrad" x1="0" x2="0" y1="0" y2="1">
-                <stop offset="0%" stop-color="rgba(16,185,129,.95)"/>
-                <stop offset="100%" stop-color="rgba(20,184,166,.85)"/>
-            </linearGradient>
-
-            <clipPath id="giftClip">
-                <rect x="46" y="74" width="68" height="58" rx="10"></rect>
-            </clipPath>
-        </defs>
-
-        <!-- FILL (clipped) -->
-        <g clip-path="url(#giftClip)">
-            <g id="giftFillLevel" transform="translate(0,58)">
-                <rect x="46" y="74" width="68" height="90" fill="url(#giftFillGrad)"></rect>
-
-                <g>
-                    <path class="gift-wave-1" fill="rgba(255,255,255,.22)"
-                          d="M30 92
-                             C 44 84, 58 100, 72 92
-                             C 86 84, 100 100, 114 92
-                             C 128 84, 142 100, 156 92
-                             L 156 160 L 30 160 Z"/>
-                    <path class="gift-wave-2" fill="rgba(255,255,255,.16)"
-                          d="M30 98
-                             C 46 90, 62 106, 78 98
-                             C 94 90, 110 106, 126 98
-                             C 142 90, 158 106, 174 98
-                             L 174 160 L 30 160 Z"/>
-                </g>
-            </g>
-        </g>
-
-        <!-- OUTLINE -->
-        <rect x="40" y="68" width="80" height="72" rx="14"
-              fill="rgba(30,41,59,.55)" stroke="rgba(148,163,184,.25)" stroke-width="2"/>
-        <rect x="36" y="52" width="88" height="22" rx="12"
-              fill="rgba(30,41,59,.65)" stroke="rgba(148,163,184,.25)" stroke-width="2"/>
-
-        <rect x="76" y="52" width="8" height="88" rx="4" fill="rgba(99,102,241,.85)"/>
-        <rect x="36" y="60" width="88" height="8" rx="4" fill="rgba(99,102,241,.85)"/>
-
-        <path d="M80 52
-                 C 68 40, 52 44, 56 58
-                 C 60 70, 74 66, 80 58
-                 C 86 66, 100 70, 104 58
-                 C 108 44, 92 40, 80 52 Z"
-              fill="rgba(99,102,241,.95)"/>
-    </svg>
-
-    <div class="absolute inset-0 flex flex-col items-center justify-center">
-        <span id="pieChartPercent" class="text-3xl font-bold text-white">0%</span>
-        <span class="text-xs text-slate-500 uppercase tracking-widest font-bold">Pago</span>
-    </div>
-</div>
-
-<div class="grid grid-cols-2 gap-4 w-full mt-2">
+                    <div class="relative w-48 h-48 my-4">
+                        <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                            <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#334155" stroke-width="2" />
+                            <path id="pieChartPath" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-dasharray="0, 100" class="transition-all duration-1000" />
+                        </svg>
+                        <div class="absolute inset-0 flex flex-col items-center justify-center">
+                            <span id="pieChartPercent" class="text-3xl font-bold text-white">0%</span>
+                            <span class="text-xs text-slate-500 uppercase tracking-widest font-bold">Pago</span>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 w-full mt-2">
                         <div class="bg-slate-900 p-2 rounded text-center border border-slate-700" mini-pill">
                             <span id="countOk" class="block text-lg font-bold text-emerald-400">0</span>
                             <span class="text-[10px] uppercase text-slate-500 font-bold">Em dia</span>
@@ -464,40 +361,11 @@
                             <span>Progresso Atual</span>
                             <span id="metaLabel" class="font-mono text-slate-400">Meta: R$ 0</span>
                         </div>
-                        <div id="progressTrack" class="w-full bg-slate-900 rounded-full h-8 border border-slate-700 relative overflow-hidden santa-track">
-    <div id="mainProgressBar" class="bg-gradient-to-r from-emerald-600 to-teal-500 h-full rounded-full text-right pr-3 flex items-center justify-end text-xs font-bold text-white shadow-[0_0_10px_rgba(16,185,129,0.3)] transition-all duration-1000" style="width: 0%">
-        0%
-    </div>
-
-    <!-- Destino (árvore) -->
-    <div class="santa-destination" aria-hidden="true">
-        <svg viewBox="0 0 64 64" class="w-full h-full">
-            <path d="M32 6 L14 34 H24 L10 54 H54 L40 34 H50 Z" fill="rgba(16,185,129,.85)"/>
-            <rect x="28" y="48" width="8" height="10" rx="2" fill="rgba(148,163,184,.75)"/>
-            <circle cx="44" cy="18" r="3" fill="rgba(250,204,21,.9)"/>
-        </svg>
-    </div>
-
-    <!-- Noel correndo -->
-    <div id="santaRunner" class="santa-runner" aria-hidden="true">
-        <svg viewBox="0 0 64 64" class="w-full h-full">
-            <path d="M22 18c7-10 20-10 28 0l-4 6H26z" fill="white" opacity=".9"/>
-            <path d="M24 18c6-8 16-8 22 0l-3 5H27z" fill="#ef4444"/>
-            <circle cx="48" cy="21" r="4" fill="white"/>
-
-            <circle cx="32" cy="30" r="10" fill="#fde68a"/>
-            <path d="M24 34c4 7 12 7 16 0" fill="none" stroke="white" stroke-width="5" stroke-linecap="round"/>
-            <circle cx="28" cy="29" r="1.5" fill="#0f172a"/>
-            <circle cx="36" cy="29" r="1.5" fill="#0f172a"/>
-
-            <path d="M18 46c6-10 22-10 28 0v8H18z" fill="#ef4444"/>
-            <rect x="28" y="44" width="10" height="6" rx="2" fill="#0f172a" opacity=".85"/>
-
-            <path d="M24 54l-8 6" stroke="#0f172a" stroke-width="5" stroke-linecap="round"/>
-            <path d="M40 54l10 4" stroke="#0f172a" stroke-width="5" stroke-linecap="round"/>
-        </svg>
-    </div>
-</div>
+                        <div class="w-full bg-slate-900 rounded-full h-8 border border-slate-700 relative overflow-hidden">
+                            <div id="mainProgressBar" class="bg-gradient-to-r from-emerald-600 to-teal-500 h-full flex items-center justify-end pr-3 text-xs font-bold text-white shadow-[0_0_10px_rgba(16,185,129,0.3)] transition-all duration-1000" style="width: 0%">
+                                0%
+                            </div>
+                        </div>
                     </div>
                     <div class="grid grid-cols-3 gap-4 mt-8">
                         <div class="bg-slate-900 p-4 rounded-lg border border-slate-700 text-center" mini-pill">
@@ -1112,9 +980,8 @@ const views = { dashboard: document.getElementById('view-dashboard'), admin: doc
             `;
 
             document.getElementById('pieChartPercent').innerText = progress.toFixed(0) + '%';
-            updateGiftProgress(progress);
-            updateSantaRunner(progress);
-document.getElementById('countOk').innerText = peopleOk;
+            document.getElementById('pieChartPath').setAttribute('stroke-dasharray', `${progress}, 100`);
+            document.getElementById('countOk').innerText = peopleOk;
             document.getElementById('countPending').innerText = participantsData.length - peopleOk;
             document.getElementById('mainProgressBar').style.width = `${progress}%`;
             document.getElementById('mainProgressBar').innerText = `${progress.toFixed(0)}%`;
