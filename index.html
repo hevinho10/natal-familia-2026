@@ -521,9 +521,11 @@
         const MONTH_ABBR = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
         
         // Dados de 2026
-        let monthlyGoals = [0, 0, 30, 30, 30, 30, 30, 30, 30, 30, 55, 55];
+        const DEFAULT_MONTHLY_GOALS = [0, 0, 30, 30, 30, 30, 30, 30, 30, 30, 55, 55];
+        let monthlyGoals = [...DEFAULT_MONTHLY_GOALS];
         let participantsData = [];
-        let fineConfig = { deadline: '20/05/2026', threshold: 50, value: 15 };
+        const DEFAULT_FINE_CONFIG = { deadline: '20/05/2026', threshold: 50, value: 15 };
+        let fineConfig = { ...DEFAULT_FINE_CONFIG };
         
         // Variáveis temporárias
         let tempAddPhotoBase64 = '';
@@ -711,8 +713,25 @@
                 const map = {};
                 (data || []).forEach(row => { map[row.key] = row.value; });
 
-                if (map[SUPABASE_KEYS.goals] != null) monthlyGoals = map[SUPABASE_KEYS.goals];
-                if (map[SUPABASE_KEYS.fine]  != null) fineConfig   = map[SUPABASE_KEYS.fine];
+                // goals
+                const loadedGoals = map[SUPABASE_KEYS.goals];
+                if (Array.isArray(loadedGoals) && loadedGoals.length === 12) {
+                    monthlyGoals = loadedGoals;
+                } else {
+                    monthlyGoals = [...DEFAULT_MONTHLY_GOALS];
+                }
+
+                // fine
+                const loadedFine = map[SUPABASE_KEYS.fine];
+                if (loadedFine && typeof loadedFine === 'object' && !Array.isArray(loadedFine)) {
+                    fineConfig = {
+                        deadline: loadedFine.deadline ?? DEFAULT_FINE_CONFIG.deadline,
+                        threshold: Number.isFinite(+loadedFine.threshold) ? +loadedFine.threshold : DEFAULT_FINE_CONFIG.threshold,
+                        value: Number.isFinite(+loadedFine.value) ? +loadedFine.value : DEFAULT_FINE_CONFIG.value,
+                    };
+                } else {
+                    fineConfig = { ...DEFAULT_FINE_CONFIG };
+                }
 
                 if (map[SUPABASE_KEYS.participants] != null && Array.isArray(map[SUPABASE_KEYS.participants])) {
                     participantsData = map[SUPABASE_KEYS.participants];
@@ -741,8 +760,8 @@
             if(confirm("Deseja apagar todos os dados e começar do zero?")) {
                 // Zera no Supabase (mantém a sessão de login)
                 participantsData = [];
-                monthlyGoals = [0, 0, 30, 30, 30, 30, 30, 30, 30, 30, 55, 55];
-                fineConfig = { deadline: '20/05/2026', threshold: 50, value: 15 };
+                monthlyGoals = [...DEFAULT_MONTHLY_GOALS];
+                fineConfig = { ...DEFAULT_FINE_CONFIG };
 
                 // remove qualquer resíduo antigo do localStorage (opcional)
                 localStorage.removeItem('natal2026_data');
