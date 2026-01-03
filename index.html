@@ -194,12 +194,26 @@
             background: rgba(15,23,42,0.35);
             border: 1px solid rgba(148,163,184,0.25);
             backdrop-filter: blur(6px);
+            box-shadow: 0 10px 24px rgba(0,0,0,0.35);
+            transition: transform 600ms ease, box-shadow 600ms ease;
+            animation: santaBob 2.4s ease-in-out infinite;
         }
         #mainProgressBar .santa-svg{
             width:22px;
             height:22px;
             color: rgba(255,255,255,0.95);
         }
+        #mainProgressBar .santa-emoji{
+            font-size:20px;
+            line-height:1;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.35));
+        }
+
+        @keyframes santaBob{
+            0%,100%{ transform: translateY(0); }
+            50%{ transform: translateY(-2px); }
+        }
+
 
         .tree-base{
             fill: rgba(255,255,255,0.08);
@@ -211,7 +225,10 @@
         }
         .tree-cover{
             fill: rgb(15,23,42);
-            transition: height 1s ease;
+            transition: transform 1s ease;
+            transform-origin: 0px 0px;
+            transform-box: fill-box;
+            will-change: transform;
         }
         .tree-trunk{
             fill: rgba(255,255,255,0.12);
@@ -221,6 +238,19 @@
             font-weight: 800;
             fill: rgba(255,255,255,0.28);
         }
+        .tree-star{
+            fill: rgba(250,204,21,0.25);
+            stroke: rgba(250,204,21,0.35);
+            stroke-width: 1.5;
+            opacity: 0.8;
+            transition: opacity 600ms ease, filter 600ms ease, fill 600ms ease;
+        }
+        .tree-star.on{
+            fill: rgba(250,204,21,0.95);
+            opacity: 1;
+            filter: drop-shadow(0 0 6px rgba(250,204,21,0.6));
+        }
+
 </style>
 </head>
 <body class="flex flex-col min-h-screen">
@@ -241,7 +271,7 @@
                 <h1 class="mt-6 text-center text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
                     Natal Família <span class="text-indigo-300">2026</span>
                 </h1>
-                <p class="mt-2 text-center text-sm text-slate-300">Gestão Financeira Natal</p>
+                <p class="mt-2 text-center text-sm text-slate-300">Gestão Financeira &amp; Metas</p>
 
                 <div class="mt-8 space-y-5">
                     <div>
@@ -265,7 +295,7 @@
             </div>
 
             <div class="border-t border-white/10 px-10 py-4 text-center text-xs text-slate-400">
-                Natal 2026
+                Natal Família 2026
             </div>
         </div>
     </div>
@@ -386,6 +416,10 @@
                                 </clipPath>
                             </defs>
 
+
+                            <g id="treeStar" class="tree-star">
+                                <polygon points="60,3 64,12 74,12 66,18 69,28 60,22 51,28 54,18 46,12 56,12"></polygon>
+                            </g>
                             <path d="M60 10 C55 20,45 30,38 40 L48 40 C40 52,32 64,26 76 L38 76 C30 88,22 100,16 112 L48 112 L48 126 L72 126 L72 112 L104 112 C98 100,90 88,82 76 L94 76 C88 64,80 52,72 40 L82 40 C75 30,65 20,60 10 Z" class="tree-base"></path>
 
                             <g clip-path="url(#treeClipNatal2026)">
@@ -425,29 +459,7 @@
                             <div id="mainProgressBar" class="bg-gradient-to-r from-emerald-600 to-teal-500 h-full flex items-center justify-end pr-3 text-xs font-bold text-white shadow-[0_0_10px_rgba(16,185,129,0.3)] transition-all duration-1000" style="width: 0%">
                                 <span id="mainProgressText" class="sr-only">0%</span>
                                 <div class="santa-badge" aria-hidden="true">
-                                    <svg viewBox="0 0 64 64" class="santa-svg" role="img" aria-label="Progresso">
-    <!-- Gorro -->
-    <path d="M14 28c4-12 15-20 26-20 9 0 16 4 20 11 1 2 1 5-1 7l-3 3-3-3c1-2 0-4-1-6-3-4-7-6-12-6-8 0-16 6-19 15l-7-1z"
-          fill="#EF4444"/>
-    <path d="M18 28h34c0 5-4 9-9 9H27c-5 0-9-4-9-9z" fill="#F8FAFC"/>
-    <circle cx="53.5" cy="28.5" r="5.5" fill="#F8FAFC"/>
-    <!-- Rosto -->
-    <circle cx="33" cy="36" r="12.5" fill="#F5CBA7"/>
-    <!-- Orelhas -->
-    <circle cx="21" cy="36" r="3" fill="#F5CBA7" opacity="0.9"/>
-    <circle cx="45" cy="36" r="3" fill="#F5CBA7" opacity="0.9"/>
-    <!-- Barba -->
-    <path d="M22 39c1 10 7 17 11 17s10-7 11-17c3 3 5 7 5 11 0 8-7 14-16 14S17 58 17 50c0-4 2-8 5-11z"
-          fill="#F8FAFC"/>
-    <path d="M26 43c2 4 5 7 7 7s5-3 7-7" fill="none" stroke="#E2E8F0" stroke-width="2" stroke-linecap="round"/>
-    <!-- Olhos -->
-    <circle cx="28" cy="36" r="1.5" fill="#0F172A"/>
-    <circle cx="38" cy="36" r="1.5" fill="#0F172A"/>
-    <!-- Nariz -->
-    <circle cx="33" cy="39" r="2" fill="#F59E0B" opacity="0.9"/>
-    <!-- Boca -->
-    <path d="M30 44c2 2 4 2 6 0" fill="none" stroke="#FB7185" stroke-width="2" stroke-linecap="round"/>
-</svg>
+                                    <span class="santa-emoji" aria-hidden="true">🎅</span>
                                 </div>
                             </div>
                         </div>
@@ -1064,18 +1076,29 @@ const views = { dashboard: document.getElementById('view-dashboard'), admin: doc
                 </div>
             `;
 
-            const pct = Math.max(0, Math.min(progress, 100));
+            const pct = Math.max(0, Math.min(Number(progress) || 0, 100));
+            const pctText = pct.toFixed(0) + '%';
+
             const treePercentEl = document.getElementById('treePercent');
-            if (treePercentEl) treePercentEl.textContent = pct.toFixed(0) + '%';
+            if (treePercentEl) treePercentEl.textContent = pctText;
+            requestAnimationFrame(() => { if (treePercentEl) treePercentEl.textContent = pctText; });
+
+            // Cover via transform (anima suave no SVG)
             const treeCoverEl = document.getElementById('treeCover');
             if (treeCoverEl) {
-                const totalH = 140;
-                const coverH = totalH * (100 - pct) / 100;
-                treeCoverEl.setAttribute('height', coverH.toFixed(2));
-            treeCoverEl.setAttribute('y','0');
-                treeCoverEl.setAttribute('x','0');
-}
-            document.getElementById('countOk').innerText = peopleOk;
+                treeCoverEl.setAttribute('height', '140');
+                treeCoverEl.setAttribute('y', '0');
+                treeCoverEl.setAttribute('x', '0');
+                treeCoverEl.style.transform = `scaleY(${(100 - pct) / 100})`;
+            }
+
+            // Estrela acende quando chega em 100%
+            const treeStarEl = document.getElementById('treeStar');
+            if (treeStarEl) {
+                if (pct >= 100) treeStarEl.classList.add('on');
+                else treeStarEl.classList.remove('on');
+            }
+document.getElementById('countOk').innerText = peopleOk;
             document.getElementById('countPending').innerText = participantsData.length - peopleOk;
             document.getElementById('mainProgressBar').style.width = `${progress}%`;
             const mainProgressTextEl = document.getElementById('mainProgressText');
@@ -1086,6 +1109,9 @@ const views = { dashboard: document.getElementById('view-dashboard'), admin: doc
             document.getElementById('summaryTotalPaid').innerText = `R$ ${totalArrecadado.toLocaleString('pt-BR')}`;
             document.getElementById('summaryTotalMissing').innerText = `R$ ${totalFalta.toLocaleString('pt-BR')}`;
 
+                        // Ordena participantes por nome (exibição)
+            participantsData.sort((a,b) => (a.name||'').localeCompare((b.name||''), 'pt-BR', {sensitivity:'base'}));
+
             renderTable(participantsData);
         }
 
@@ -1093,8 +1119,9 @@ const views = { dashboard: document.getElementById('view-dashboard'), admin: doc
             const tbody = document.getElementById('participantsTableBody');
             tbody.innerHTML = '';
             if (data.length === 0) { tbody.innerHTML = `<tr><td colspan="17" class="p-8 text-center text-slate-500">Nenhum participante cadastrado.</td></tr>`; return; }
+            const sortedData = [...data].sort((a,b) => (a.name||'').localeCompare((b.name||''), 'pt-BR', {sensitivity:'base'}));
 
-            data.forEach((p, index) => {
+            sortedData.forEach((p, index) => {
                 const realIndex = participantsData.findIndex(pp => pp.id === p.id);
                 const clickAttr = isAdmin ? `onclick="openEditModal(${realIndex})"` : '';
                 const editTd = isAdmin ? `
