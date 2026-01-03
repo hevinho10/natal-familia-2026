@@ -9,91 +9,41 @@
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
     <!-- Fonte Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
     <!-- Ícones -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-
     <!-- Calendário -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://npmcdn.com/flatpickr/dist/l10n/pt.js"></script>
-    
     <!-- SUPABASE -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background-color: #0f172a; /* Slate 900 */
-            color: #f1f5f9; /* Slate 100 */
-        }
-
-        .card {
-            background-color: #1e293b; /* Slate 800 */
-            border: 1px solid #334155; /* Slate 700 */
-            border-radius: 0.75rem;
-            padding: 1.5rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-
-        .tab-btn { 
-            padding: 0.5rem 1rem; 
-            border-radius: 0.5rem; 
-            font-size: 0.875rem; 
-            font-weight: 500; 
-            color: #94a3b8; 
-            transition: all 0.2s;
-        }
+        body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: #f1f5f9; }
+        .card { background-color: #1e293b; border: 1px solid #334155; border-radius: 0.75rem; padding: 1.5rem; }
+        .tab-btn { padding: 0.5rem 1rem; border-radius: 0.5rem; font-size: 0.875rem; font-weight: 500; color: #94a3b8; transition: all 0.2s; }
         .tab-btn:hover { color: white; background-color: #334155; }
         .tab-btn.active { background-color: #4f46e5; color: white; }
-
-        /* Scrollbar */
         ::-webkit-scrollbar { height: 8px; width: 8px; }
         ::-webkit-scrollbar-track { background: #0f172a; }
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #475569; }
-
-        /* Badges */
-        .status-badge {
-            font-size: 0.75rem; 
-            font-weight: 600; 
-            padding: 1px 0; 
-            width: 100%; 
-            display: block; 
-            border-radius: 4px; 
-            text-align: center;
-        }
+        .status-badge { font-size: 0.75rem; font-weight: 600; padding: 1px 0; width: 100%; display: block; border-radius: 4px; text-align: center; }
         .bg-paid { background-color: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.2); }
         .bg-partial { background-color: rgba(250, 204, 21, 0.15); color: #facc15; border: 1px solid rgba(250, 204, 21, 0.2); }
         .bg-missed { background-color: rgba(248, 113, 113, 0.15); color: #f87171; border: 1px solid rgba(248, 113, 113, 0.2); }
         .bg-none { background-color: rgba(148, 163, 184, 0.1); color: #94a3b8; border: 1px dashed rgba(148, 163, 184, 0.2); }
         .bg-birthday { background: linear-gradient(135deg, rgba(236, 72, 153, 0.15), rgba(168, 85, 247, 0.15)); color: #f472b6; border: 1px solid rgba(236, 72, 153, 0.3); display: flex; justify-content: center; align-items: center; gap: 2px; }
-
-        .input-dark {
-            background-color: #0f172a;
-            border: 1px solid #334155;
-            color: white;
-            border-radius: 0.5rem;
-            padding: 0.5rem;
-            width: 100%;
-            font-size: 0.875rem;
-        }
+        .input-dark { background-color: #0f172a; border: 1px solid #334155; color: white; border-radius: 0.5rem; padding: 0.5rem; width: 100%; font-size: 0.875rem; }
         .input-dark:focus { outline: none; border-color: #6366f1; ring: 1px #6366f1; }
-
         .fade-in { animation: fadeIn 0.3s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-        
         th.sticky-col, td.sticky-col { position: sticky; left: 0; z-index: 20; background-color: #1e293b; box-shadow: 2px 0 5px rgba(0,0,0,0.2); }
         tr:hover td.sticky-col { background-color: #334155; }
         .profile-pic { object-fit: cover; width: 100%; height: 100%; }
-
         #loadingOverlay { background: rgba(15, 23, 42, 0.98); z-index: 200; position: fixed; inset: 0; display: flex; justify-content: center; align-items: center; color: white; flex-direction: column; }
-        #debugLog { margin-top: 10px; font-family: monospace; font-size: 0.7rem; color: #64748b; }
         body.role-user .admin-only { display: none !important; }
-        
         .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
         .status-dot.online { background-color: #22c55e; box-shadow: 0 0 5px #22c55e; }
         .status-dot.offline { background-color: #f59e0b; }
@@ -104,10 +54,8 @@
     <!-- Loading -->
     <div id="loadingOverlay" class="hidden">
         <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-white mb-4"></div>
-        <p class="animate-pulse">Acedendo ao sistema...</p>
-        <p class="text-xs text-slate-400 mt-2" id="loadingText">Iniciando...</p>
-        <div id="debugLog"></div>
-        <button onclick="forceOfflineMode()" class="mt-4 text-xs text-indigo-400 hover:text-white underline">Demorando? Usar modo offline</button>
+        <p class="animate-pulse">Conectando ao Supabase...</p>
+        <p class="text-xs text-slate-400 mt-2" id="loadingText">Aguarde...</p>
     </div>
 
     <!-- LOGIN -->
@@ -118,39 +66,26 @@
                 <h1 class="text-2xl font-bold text-white">Natal Família 2026</h1>
                 <p class="text-slate-400 text-sm">Área Restrita da Família</p>
             </div>
-            
             <form onsubmit="handleLogin(event)" class="space-y-4">
-                <div>
-                    <label class="text-xs uppercase font-bold text-slate-500 mb-1 block">Usuário</label>
-                    <input type="text" id="loginUser" class="input-dark pl-4 bg-slate-950" placeholder="Ex: admin" required>
-                </div>
-                <div>
-                    <label class="text-xs uppercase font-bold text-slate-500 mb-1 block">Senha</label>
-                    <input type="password" id="loginPass" class="input-dark pl-4 bg-slate-950" placeholder="••••••••" required>
-                </div>
+                <div><label class="text-xs uppercase font-bold text-slate-500 mb-1 block">Usuário</label><input type="text" id="loginUser" class="input-dark pl-4 bg-slate-950" required></div>
+                <div><label class="text-xs uppercase font-bold text-slate-500 mb-1 block">Senha</label><input type="password" id="loginPass" class="input-dark pl-4 bg-slate-950" required></div>
                 <p id="loginError" class="text-rose-500 text-xs text-center h-4 font-bold"></p>
-                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-lg transition shadow-lg shadow-indigo-500/20">
-                    Entrar
-                </button>
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-lg transition shadow-lg">Entrar</button>
             </form>
         </div>
-        <p class="mt-8 text-slate-600 text-xs">Desenvolvido com 🎄 para 2026</p>
     </div>
 
     <!-- Navbar -->
     <nav id="mainNavbar" class="hidden bg-slate-800 border-b border-slate-700 sticky top-0 z-50 h-16 shadow-md">
         <div class="max-w-7xl mx-auto px-4 h-full flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <div class="bg-rose-600 p-1.5 rounded-lg shadow-lg flex items-center justify-center w-10 h-10">
-                    <span class="text-2xl leading-none">🎅</span>
-                </div>
+                <div class="bg-rose-600 p-1.5 rounded-lg shadow-lg flex items-center justify-center w-10 h-10"><span class="text-2xl leading-none">🎅</span></div>
                 <h1 class="text-lg font-bold text-white tracking-tight hidden sm:block">Natal Família 2026</h1>
             </div>
-            
             <div class="flex items-center gap-4">
                 <div class="flex bg-slate-900/50 p-1 rounded-lg border border-slate-700">
-                    <button onclick="switchTab('dashboard')" id="btn-dashboard" class="tab-btn active"><i class="ph ph-chart-pie-slice mr-1"></i> Painel</button>
-                    <button onclick="switchTab('admin')" id="btn-admin" class="tab-btn admin-only"><i class="ph ph-gear mr-1"></i> Configurar</button>
+                    <button onclick="switchTab('dashboard')" id="btn-dashboard" class="tab-btn active">Painel</button>
+                    <button onclick="switchTab('admin')" id="btn-admin" class="tab-btn admin-only">Configurar</button>
                 </div>
                 <button onclick="handleLogout()" class="text-slate-400 hover:text-white transition" title="Sair"><i class="ph ph-sign-out text-xl"></i></button>
             </div>
@@ -160,7 +95,6 @@
     <!-- Conteúdo -->
     <main id="mainContent" class="hidden flex-grow p-4 sm:p-6 w-full max-w-7xl mx-auto space-y-6">
         
-        <!-- Status Bar -->
         <div class="text-right text-xs text-slate-500 flex justify-end items-center gap-2">
             <span id="connectionStatus" class="flex items-center"><div class="w-2 h-2 rounded-full bg-yellow-500 mr-2 animate-pulse"></div> Inicializando...</span>
         </div>
@@ -171,7 +105,6 @@
                 <div><h2 class="text-xl font-bold text-white">Visão Geral Financeira</h2><p class="text-sm text-slate-400">Status financeiro de 2026</p></div>
                 <div class="flex gap-3 admin-only">
                     <button onclick="resetData()" class="text-xs text-rose-400 hover:text-rose-300 font-medium px-3 py-2 border border-rose-900 rounded hover:bg-rose-900/20 transition flex items-center gap-2"><i class="ph ph-trash"></i> Resetar</button>
-                    <label class="cursor-pointer bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300 px-4 py-2 rounded text-xs font-bold uppercase transition flex items-center gap-2"><i class="ph ph-file-csv text-green-400 text-lg"></i> Importar CSV<input type="file" id="csvInput" accept=".csv" class="hidden"></label>
                 </div>
             </div>
 
@@ -191,10 +124,8 @@
                                 <th class="p-1 text-center w-14">Abr</th><th class="p-1 text-center w-14">Mai</th><th class="p-1 text-center w-14">Jun</th>
                                 <th class="p-1 text-center w-14">Jul</th><th class="p-1 text-center w-14">Ago</th><th class="p-1 text-center w-14">Set</th>
                                 <th class="p-1 text-center w-14">Out</th><th class="p-1 text-center w-14">Nov</th><th class="p-1 text-center w-14">Dez</th>
-                                <!-- Multa (Dívida) -->
-                                <th class="p-1 text-center bg-rose-900/10 border-l border-rose-900/20 text-rose-400 min-w-[50px]" title="Valor da Multa (A Pagar)">Multa</th>
-                                <!-- Extra (Pagamento) -->
-                                <th class="p-1 text-center bg-indigo-900/10 border-l border-indigo-900/20 text-indigo-400 min-w-[50px]" title="Valor Extra (Pago)">Extra</th>
+                                <th class="p-1 text-center bg-rose-900/10 border-l border-rose-900/20 text-rose-400 min-w-[50px]">Multa</th>
+                                <th class="p-1 text-center bg-indigo-900/10 border-l border-indigo-900/20 text-indigo-400 min-w-[50px]">Extra</th>
                                 <th class="p-2 text-right bg-slate-800/50 min-w-[80px]">Total</th>
                                 <th class="p-2 text-right bg-slate-800/50 border-r border-slate-700 min-w-[80px]">Falta</th>
                                 <th class="p-2 text-center sticky right-0 bg-slate-900 z-10 w-12 shadow-[-5px_0_10px_rgba(0,0,0,0.2)] admin-only">Edit</th>
@@ -207,24 +138,24 @@
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div class="card lg:col-span-1 flex flex-col items-center justify-center">
-                    <h3 class="text-sm font-bold text-slate-400 w-full mb-4 flex items-center gap-2 border-b border-slate-700 pb-2"><i class="ph ph-chart-donut text-indigo-400"></i> Status de Quitação</h3>
+                    <h3 class="text-sm font-bold text-slate-400 w-full mb-4 flex items-center gap-2 border-b border-slate-700 pb-2"><i class="ph ph-chart-donut text-indigo-400"></i> Status</h3>
                     <div class="relative w-48 h-48 my-4">
                         <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36"><path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#334155" stroke-width="2" /><path id="pieChartPath" d="" fill="none" stroke="#6366f1" stroke-width="2" stroke-dasharray="0, 100" class="transition-all duration-1000" /></svg>
-                        <div class="absolute inset-0 flex flex-col items-center justify-center"><span id="pieChartPercent" class="text-3xl font-bold text-white">0%</span><span class="text-xs text-slate-500 uppercase tracking-widest font-bold">Pago</span></div>
+                        <div class="absolute inset-0 flex flex-col items-center justify-center"><span id="pieChartPercent" class="text-3xl font-bold text-white">0%</span><span class="text-xs text-slate-500 uppercase font-bold">Pago</span></div>
                     </div>
                     <div class="grid grid-cols-2 gap-4 w-full mt-2">
-                        <div class="bg-slate-900 p-2 rounded text-center border border-slate-700"><span id="countOk" class="block text-lg font-bold text-emerald-400">0</span><span class="text-[10px] uppercase text-slate-500 font-bold">Em dia</span></div>
+                        <div class="bg-slate-900 p-2 rounded text-center border border-slate-700"><span id="countOk" class="block text-lg font-bold text-emerald-400">0</span><span class="text-[10px] uppercase text-slate-500 font-bold">Quitado</span></div>
                         <div class="bg-slate-900 p-2 rounded text-center border border-slate-700"><span id="countPending" class="block text-lg font-bold text-rose-400">0</span><span class="text-[10px] uppercase text-slate-500 font-bold">Pendente</span></div>
                     </div>
                 </div>
                 <div class="card lg:col-span-2 flex flex-col justify-between">
                     <div>
-                        <h3 class="text-sm font-bold text-slate-400 mb-6 flex items-center gap-2 border-b border-slate-700 pb-2"><i class="ph ph-trend-up text-emerald-400"></i> Evolução da Arrecadação</h3>
+                        <h3 class="text-sm font-bold text-slate-400 mb-6 flex items-center gap-2 border-b border-slate-700 pb-2"><i class="ph ph-trend-up text-emerald-400"></i> Evolução</h3>
                         <div class="flex justify-between text-sm text-slate-300 mb-2"><span>Progresso Atual</span><span id="metaLabel" class="font-mono text-slate-400">Meta: R$ 0</span></div>
                         <div class="w-full bg-slate-900 rounded-full h-8 border border-slate-700 relative overflow-hidden"><div id="mainProgressBar" class="bg-gradient-to-r from-emerald-600 to-teal-500 h-full flex items-center justify-end pr-3 text-xs font-bold text-white shadow-[0_0_10px_rgba(16,185,129,0.3)] transition-all duration-1000" style="width: 0%">0%</div></div>
                     </div>
                     <div class="grid grid-cols-3 gap-4 mt-8">
-                        <div class="bg-slate-900 p-4 rounded-lg border border-slate-700 text-center"><p class="text-[10px] text-slate-500 font-bold uppercase mb-1">Esperado Total</p><p id="summaryTotalExpected" class="text-lg font-bold text-white">R$ 0</p></div>
+                        <div class="bg-slate-900 p-4 rounded-lg border border-slate-700 text-center"><p class="text-[10px] text-slate-500 font-bold uppercase mb-1">Esperado</p><p id="summaryTotalExpected" class="text-lg font-bold text-white">R$ 0</p></div>
                         <div class="bg-slate-900 p-4 rounded-lg border border-slate-700 text-center"><p class="text-[10px] text-slate-500 font-bold uppercase mb-1">Confirmado</p><p id="summaryTotalPaid" class="text-lg font-bold text-emerald-400">R$ 0</p></div>
                         <div class="bg-slate-900 p-4 rounded-lg border border-slate-700 text-center"><p class="text-[10px] text-slate-500 font-bold uppercase mb-1">Em Aberto</p><p id="summaryTotalMissing" class="text-lg font-bold text-rose-400">R$ 0</p></div>
                     </div>
@@ -261,7 +192,6 @@
                     </div>
                     <div class="card border-l-4 border-l-rose-500">
                         <h3 class="text-base font-bold text-white mb-2 flex items-center gap-2"><i class="ph ph-siren text-rose-400"></i> Auditoria de Multas</h3>
-                        <p class="text-[10px] text-slate-400 mb-4 bg-slate-900 p-2 rounded">Quem não pagou o mínimo até a data recebe multa (dívida).</p>
                         <div class="space-y-3">
                             <div><label class="text-[10px] text-slate-500 font-bold uppercase block mb-1">Data Limite</label><input type="text" id="fineDeadline" class="input-dark bg-slate-900" placeholder="Ex: 20/05/2026" onchange="saveFineConfig()"></div>
                             <div class="grid grid-cols-2 gap-4"><div><label class="text-[10px] text-slate-500 font-bold uppercase block mb-1">Mínimo (R$)</label><input type="number" id="fineThreshold" class="input-dark" value="50" onchange="saveFineConfig()"></div><div><label class="text-[10px] text-slate-500 font-bold uppercase block mb-1">Multa (R$)</label><input type="number" id="fineValue" class="input-dark border-rose-500/30 text-rose-400" value="15" onchange="saveFineConfig()"></div></div>
@@ -311,20 +241,19 @@
     </div>
 
     <script>
-        // CONFIGURAÇÕES SUPABASE
+        // CONFIGURAÇÕES SUPABASE CORRETAS (URL E KEY PUBLIC)
         const SUPABASE_URL = 'https://nctjowqvtbejbipxhhd.supabase.co'; 
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5jdGpvd3F1YnRmYmVqaXB4aGhkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODk1NjYsImV4cCI6MjA4Mjk2NTU2Nn0.63GaaShzKx0oO6n4ci0Rj3onmenYycjcE0EN7vVvErE'; 
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5jdGpvd3F1YnRmYmVqaXB4aGhkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODk1NjYsImV4cCI6MjA4Mjk2NTU2Nn0.63GaaShzKx0oO6n4ci0Rj3onmenYycjcE0EN7vVvErE';
         
-        // Inicialização Protegida
         let dbClient = null;
+
         try {
             dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-            console.log("Supabase Client criado");
+            console.log("DB Client OK");
         } catch (e) {
-            console.warn("Supabase não carregou. Usando modo Offline.");
+            console.warn("DB Client Error", e);
         }
 
-        // VARIÁVEIS GLOBAIS
         const MONTHS_ABBR = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
         let monthlyGoals = [0, 0, 30, 30, 30, 30, 30, 30, 30, 30, 55, 55];
         let participantsData = [];
@@ -333,11 +262,10 @@
         let tempAddPhotoBase64 = '';
         let tempEditPhotoBase64 = '';
 
-        // === AUTH E INIT ===
         function handleLogin(e) {
             e.preventDefault();
-            const user = document.getElementById('loginUser').value;
-            const pass = document.getElementById('loginPass').value;
+            const user = document.getElementById('loginUser').value.trim();
+            const pass = document.getElementById('loginPass').value.trim();
             if (user === 'admin' && pass === 'Admin2026') { currentUserRole = 'admin'; enterSystem(); }
             else if (user === 'Natal' && pass === '2026') { currentUserRole = 'user'; enterSystem(); }
             else { document.getElementById('loginError').innerText = "Dados incorretos."; }
@@ -354,70 +282,33 @@
         function handleLogout() { location.reload(); }
         function initSystem() { initDatePickers(); loadDataChain(); }
 
-        // === LÓGICA HÍBRIDA ===
         async function loadDataChain() {
             showLoading(true);
-            const logDiv = document.getElementById('debugLog');
             
-            // 1. Carrega local (fallback imediato)
-            loadFromLocal();
-            logDiv.innerHTML = "Tentando nuvem...";
-
-            // 2. Tenta nuvem (com timeout curto)
             if (dbClient) {
-                const cloudPromise = new Promise(async (resolve, reject) => {
-                    const { data, error } = await dbClient.from('natal_2026').select('conteudo').eq('id', 1).single();
-                    if(error && error.code !== 'PGRST116') reject(error);
-                    resolve(data);
-                });
-                const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject("timeout"), 2000)); // 2s
-
                 try {
-                    const data = await Promise.race([cloudPromise, timeoutPromise]);
+                    const { data, error } = await dbClient.from('natal_2026').select('conteudo').eq('id', 1).single();
                     if (data && data.conteudo) {
                         participantsData = data.conteudo.participants || [];
                         monthlyGoals = data.conteudo.goals || monthlyGoals;
                         fineConfig = data.conteudo.fine || fineConfig;
-                        logDiv.innerHTML = "Online";
                         updateStatus('online');
                     } else {
-                        logDiv.innerHTML = "Online (Vazio)";
+                        // Tabela vazia ou erro 404, assume estado limpo (sem dados de exemplo)
+                        participantsData = [];
                         updateStatus('online');
                     }
                 } catch (e) {
-                    console.warn("Erro nuvem:", e);
-                    logDiv.innerHTML = "Offline (Erro rede/chave)";
-                    loadFromLocal(); // Garante reload local
+                    console.warn("Erro Nuvem, carregando vazio.");
                     updateStatus('offline');
                 }
-            } else {
-                logDiv.innerHTML = "Modo Offline";
-                updateStatus('offline');
             }
 
             renderUI();
             setTimeout(() => showLoading(false), 500);
         }
 
-        function forceOfflineMode() {
-            loadFromLocal();
-            renderUI();
-            showLoading(false);
-            updateStatus('offline');
-        }
-
-        function loadFromLocal() {
-            const d = localStorage.getItem('natal2026_data');
-            if(d) participantsData = JSON.parse(d);
-            const g = localStorage.getItem('natal2026_goals');
-            if(g) monthlyGoals = JSON.parse(g);
-        }
-
         async function saveData() {
-            localStorage.setItem('natal2026_data', JSON.stringify(participantsData));
-            localStorage.setItem('natal2026_goals', JSON.stringify(monthlyGoals));
-            localStorage.setItem('natal2026_fine', JSON.stringify(fineConfig));
-
             if (dbClient) {
                 const payload = { participants: participantsData, goals: monthlyGoals, fine: fineConfig };
                 dbClient.from('natal_2026').upsert({ id: 1, tipo: 'dados_gerais', conteudo: payload })
@@ -430,22 +321,23 @@
 
         function updateStatus(status) {
             const el = document.getElementById('connectionStatus');
-            if(el) {
-                const color = status === 'online' ? 'bg-emerald-500' : 'bg-amber-500';
-                const text = status === 'online' ? 'Online' : 'Offline';
-                el.innerHTML = `<span class="w-2 h-2 rounded-full ${color} inline-block mr-2"></span> ${text}`;
-            }
+            if(el) el.innerHTML = status === 'online' ? '<span class="status-dot online"></span> Online' : '<span class="status-dot offline"></span> Offline';
         }
 
-        // === UI RENDER ===
+        function resetData() {
+            if(confirm("Apagar tudo?")) {
+                 participantsData = []; monthlyGoals = [0,0,0,0,0,0,0,0,0,0,0,0];
+                 calculateTotalsAndRender(); saveData();
+            }
+        }
+        function showLoading(show) { document.getElementById('loadingOverlay').classList.toggle('hidden', !show); }
+
         function renderUI() {
             renderMonthlyGoalsInputs();
             updateTotalAnnualGoalUI();
             document.getElementById('fineThreshold').value = fineConfig.threshold;
             document.getElementById('fineValue').value = fineConfig.value;
-            if(document.getElementById('fineDeadline')._flatpickr) {
-                document.getElementById('fineDeadline')._flatpickr.setDate(fineConfig.deadline);
-            }
+            if(document.getElementById('fineDeadline')._flatpickr) document.getElementById('fineDeadline')._flatpickr.setDate(fineConfig.deadline);
             calculateTotalsAndRender();
         }
 
@@ -459,10 +351,9 @@
                     personalGoal -= monthlyGoals[p.birthdayMonth];
                 }
                 p.months.forEach(val => paidSum += val);
-                p.totalPaid = paidSum + (p.extra || 0); 
-                p.totalGoal = personalGoal + (p.fine || 0); 
-                let missing = p.totalGoal - p.totalPaid;
-                p.missing = missing < 0 ? 0 : missing;
+                p.totalPaid = paidSum + (p.extra || 0);
+                p.totalGoal = personalGoal + (p.fine || 0);
+                p.missing = Math.max(0, p.totalGoal - p.totalPaid);
             });
             updateDashboard();
         }
@@ -480,7 +371,7 @@
                 <div class="card border-l-4 border-l-indigo-500"><p class="text-slate-400 text-[10px] font-bold uppercase">Participantes</p><div class="flex items-end gap-2 mt-1"><h2 class="text-2xl font-bold text-white">${participantsData.length}</h2><span class="text-xs text-indigo-400 font-bold mb-1 px-2 rounded bg-indigo-900/30">${ok} Quitados</span></div></div>
                 <div class="card border-l-4 border-l-amber-500"><p class="text-slate-400 text-[10px] font-bold uppercase">Extra Arrecadado</p><h2 class="text-2xl font-bold text-white mt-1">R$ ${participantsData.reduce((acc, p) => acc + (p.extra || 0), 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</h2></div>
             `;
-            // Charts
+            
             document.getElementById('pieChartPercent').innerText = prog.toFixed(0) + '%';
             document.getElementById('pieChartPath').setAttribute('stroke-dasharray', `${prog}, 100`);
             document.getElementById('countOk').innerText = ok;
@@ -496,7 +387,7 @@
 
         function renderTable(data) {
             const tbody = document.getElementById('participantsTableBody'); tbody.innerHTML = '';
-            if (data.length === 0) { tbody.innerHTML = `<tr><td colspan="17" class="p-8 text-center text-slate-500">Nenhum dado.</td></tr>`; return; }
+            if (data.length === 0) { tbody.innerHTML = `<tr><td colspan="17" class="p-8 text-center text-slate-500">Nenhum dado. Cadastre alguém.</td></tr>`; return; }
 
             data.forEach((p, index) => {
                 let monthsHTML = '';
@@ -513,7 +404,6 @@
                 
                 const fineDisplay = (p.fine||0) > 0 ? `<span class="text-rose-400 font-bold" title="Dívida">R$${p.fine}</span>` : '-';
                 const extraDisplay = (p.extra||0) > 0 ? `<span class="text-indigo-400 font-bold">+R$${p.extra}</span>` : '-';
-                
                 const editBtn = currentUserRole === 'admin' ? `<button onclick="openEditModal(${index})" class="text-indigo-400 hover:text-white p-1.5 rounded hover:bg-indigo-600 transition shadow-sm"><i class="ph ph-pencil-simple text-lg"></i></button>` : '';
 
                 const row = document.createElement('tr'); row.className = "hover:bg-slate-700 transition border-b border-slate-700 last:border-0 group";
@@ -522,7 +412,7 @@
             });
         }
 
-        // MODAL
+        // MODAL & ADMIN FUNCTIONS (Mantidas iguais à versão anterior)
         function openEditModal(index) {
             const p = participantsData[index]; if(!p) return;
             tempEditPhotoBase64 = '';
@@ -537,37 +427,27 @@
             p.months.forEach((val, idx) => { c.innerHTML += `<div class="bg-slate-900 border border-slate-700 rounded p-2 flex flex-col items-center"><label class="text-[10px] uppercase text-slate-500 font-bold mb-1">${MONTHS_ABBR[idx]}</label><input type="number" id="edit-month-${idx}" value="${val}" class="bg-transparent text-white text-center font-mono focus:outline-none border-b border-transparent focus:border-indigo-500 transition-colors w-full"></div>`; });
             document.getElementById('editPaymentModal').classList.remove('hidden'); document.getElementById('editPaymentModal').classList.add('flex');
         }
-
         function closeEditModal() { document.getElementById('editPaymentModal').classList.add('hidden'); document.getElementById('editPaymentModal').classList.remove('flex'); }
-
         async function saveEditModal() {
             const index = document.getElementById('editParticipantIndex').value; const p = participantsData[index];
-            const oldTotalPaidMonths = p.months.reduce((a,b)=>a+b,0);
+            const oldM = p.months.reduce((a,b)=>a+b,0);
             for(let i=0; i<12; i++) { p.months[i] = parseFloat(document.getElementById(`edit-month-${i}`).value) || 0; }
             p.fine = parseFloat(document.getElementById('editFineValue').value) || 0;
             p.extra = parseFloat(document.getElementById('editExtraValue').value) || 0;
             const b = parseInt(document.getElementById('editBirthdayMonth').value); p.birthdayMonth = b === -1 ? null : b;
             if(tempEditPhotoBase64) p.photo = tempEditPhotoBase64;
-
-            // Auto-multa logic
-            const parts = fineConfig.deadline.split('/'); const deadlineDate = new Date(parts[2], parts[1] - 1, parts[0]); deadlineDate.setHours(23, 59, 59, 999);
-            const today = new Date();
-            if (today > deadlineDate && p.fine === 0 && oldTotalPaidMonths < fineConfig.threshold) {
-                 if(confirm(`ATENÇÃO: Prazo vencido (${fineConfig.deadline}).\nPagamento anterior: R$ ${oldTotalPaidMonths}.\nAplicar multa de R$ ${fineConfig.value}?`)) {
-                    p.fine = fineConfig.value;
-                 }
+            const d = fineConfig.deadline.split('/'); const dd = new Date(d[2],d[1]-1,d[0]); dd.setHours(23,59,59);
+            if (new Date() > dd && p.fine === 0 && oldM < fineConfig.threshold) {
+                 if(confirm(`Prazo vencido (${fineConfig.deadline}). Aplicar multa de R$ ${fineConfig.value}?`)) p.fine = fineConfig.value;
             }
-
             calculateTotalsAndRender(); saveData(); closeEditModal();
         }
-
-        // ADMIN
         function renderMonthlyGoalsInputs() {
             const c = document.getElementById('monthlyGoalsContainer'); c.innerHTML = '';
             monthlyGoals.forEach((val, idx) => c.innerHTML += `<div class="bg-slate-900 p-2 rounded border border-slate-700 flex flex-col"><label class="text-[10px] uppercase text-slate-500 font-bold mb-1">${MONTHS_ABBR[idx]}</label><div class="flex items-center"><span class="text-xs text-slate-500 mr-1">R$</span><input type="number" id="goal-${idx}" value="${val}" onchange="updateTotalAnnualGoalUI()" class="bg-transparent text-white text-sm w-full font-mono focus:outline-none"></div></div>`);
         }
         function updateTotalAnnualGoalUI() { let t=0; document.querySelectorAll('[id^="goal-"]').forEach(i=>t+=parseFloat(i.value)||0); document.getElementById('totalAnnualGoal').innerText = `R$ ${t.toLocaleString('pt-BR',{minimumFractionDigits:2})}`; }
-        function saveMonthlyGoals() { document.querySelectorAll('[id^="goal-"]').forEach((i,x)=>monthlyGoals[x]=parseFloat(i.value)||0); calculateTotalsAndRender(); saveData(); alert("Metas salvas!"); }
+        function saveMonthlyGoals() { document.querySelectorAll('[id^="goal-"]').forEach((i,x)=>monthlyGoals[x]=parseFloat(i.value)||0); calculateTotalsAndRender(); saveData(); alert("Salvo!"); }
         function saveFineConfig() { fineConfig.deadline=document.getElementById('fineDeadline').value; fineConfig.threshold=parseFloat(document.getElementById('fineThreshold').value); fineConfig.value=parseFloat(document.getElementById('fineValue').value); saveData(); }
         function renderAdminUserList() {
             const tb = document.getElementById('adminUsersTableBody'); tb.innerHTML='';
@@ -581,13 +461,6 @@
             calculateTotalsAndRender(); saveData(); renderAdminUserList();
         }
         function removeParticipant(i) { if(confirm("Remover?")) { participantsData.splice(i,1); calculateTotalsAndRender(); saveData(); renderAdminUserList(); } }
-        function checkAndApplyFinesAutomatic() {
-            const d = fineConfig.deadline.split('/'); const dd = new Date(d[2],d[1]-1,d[0]); dd.setHours(23,59,59);
-            if(new Date() > dd) {
-                let c=0; participantsData.forEach(p => { const m = p.months.reduce((a,b)=>a+b,0); if(m < fineConfig.threshold && (p.fine||0) === 0) { p.fine = fineConfig.value; c++; } });
-                if(c>0) { calculateTotalsAndRender(); saveData(); }
-            }
-        }
         function manualFineCheck() {
             const d = fineConfig.deadline.split('/'); const dd = new Date(d[2],d[1]-1,d[0]); dd.setHours(23,59,59);
             if(new Date()<=dd && !confirm(`Prazo (${fineConfig.deadline}) não venceu. Aplicar?`)) return;
@@ -595,31 +468,15 @@
             calculateTotalsAndRender(); saveData(); document.getElementById('fineFeedback').innerText = `${c} aplicadas.`;
         }
 
-        // UTILS
+        // UTILS & HELPERS
         function switchTab(t) { if(t==='admin'&&currentUserRole!=='admin')return; document.getElementById('view-dashboard').classList.add('hidden'); document.getElementById('view-admin').classList.add('hidden'); document.getElementById('btn-dashboard').classList.remove('active'); document.getElementById('btn-admin').classList.remove('active'); document.getElementById('view-'+t).classList.remove('hidden'); document.getElementById('btn-'+t).classList.add('active'); if(t==='admin') renderAdminUserList(); }
         function initDatePickers() { flatpickr("#fineDeadline", { dateFormat: "d/m/Y", locale: "pt", defaultDate: fineConfig.deadline, theme: "dark", onChange: (d,s) => { fineConfig.deadline=s; saveData(); } }); }
         function readFileAsBase64(f) { return new Promise((res,rej)=>{const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(f);}); }
         async function previewAddUserImage(i) { if(i.files[0]) { tempAddPhotoBase64=await readFileAsBase64(i.files[0]); document.getElementById('newUserPhotoName').classList.remove('hidden'); i.parentElement.classList.add('bg-emerald-600'); } }
         async function previewEditUserImage(i) { if(i.files[0]) { tempEditPhotoBase64=await readFileAsBase64(i.files[0]); document.getElementById('modalAvatarImg').src=tempEditPhotoBase64; document.getElementById('modalAvatarImg').classList.remove('hidden'); document.getElementById('modalAvatarText').classList.add('hidden'); } }
         document.getElementById('searchInput').addEventListener('keyup', (e) => { const t = e.target.value.toLowerCase(); renderTable(participantsData.filter(p => p.name.toLowerCase().includes(t))); });
-        const fileInput = document.getElementById('csvInput'); fileInput.addEventListener('change', (e) => { const f=e.target.files[0]; if(f){ const r=new FileReader(); r.onload=(evt)=>parseCSV(evt.target.result); r.readAsText(f); } });
-        function parseCSV(txt) {
-             const lines = txt.split('\n'); const newData = []; const MONTHS_CSV = ['MARCO','ABRIL','MAIO','JUNHO','JULHO','AGOSTO','SETEMBRO','OUTUBRO','NOVEMBRO','DEZEMBRO'];
-             let hIdx = lines.findIndex(l => l.toUpperCase().includes('PAGANTES')); if(hIdx===-1){alert("CSV Inválido");return;}
-             const headers = lines[hIdx].split(',').map(h=>h.trim().toUpperCase()); const mIdxs = MONTHS_CSV.map(m=>headers.indexOf(m)); const nIdx = headers.indexOf('PAGANTES'); const eIdx = headers.findIndex(h=>h.includes('EXTRA')||h.includes('MULTA'));
-             for(let i=hIdx+1; i<lines.length; i++){
-                 const c = lines[i].split(','); if(!c[nIdx]||c[nIdx].trim()===''||c[nIdx]==='PAGANTES') continue;
-                 let mv = [0,0]; mIdxs.forEach(x => { mv.push(x!==-1?(parseFloat(c[x])||0):0); });
-                 newData.push({ id: i, name: c[nIdx], months: mv, extra: parseFloat(c[eIdx])||0, fine: 0, totalPaid: 0, missing: 0, photo: '', birthdayMonth: null });
-             }
-             participantsData = newData; calculateTotalsAndRender(); saveData(); alert("Importado!");
-        }
-
-        // Função de show loading
-        function showLoading(show) {
-            const el = document.getElementById('loadingOverlay');
-            if(show) el.classList.remove('hidden'); else el.classList.add('hidden');
-        }
+        function showLoading(show) { document.getElementById('loadingOverlay').classList.toggle('hidden', !show); }
+        function updateStatus(status) { const el = document.getElementById('connectionStatus'); if(el) el.innerHTML = status === 'online' ? '<span class="status-dot online"></span> Online' : '<span class="status-dot offline"></span> Offline'; }
     </script>
 </body>
 </html>
