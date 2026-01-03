@@ -92,6 +92,12 @@
 
         #loadingOverlay { background: rgba(15, 23, 42, 0.95); z-index: 200; position: fixed; inset: 0; display: flex; justify-content: center; align-items: center; color: white; flex-direction: column; }
         body.role-user .admin-only { display: none !important; }
+        
+        .status-dot {
+            width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px;
+        }
+        .status-dot.online { background-color: #22c55e; box-shadow: 0 0 5px #22c55e; }
+        .status-dot.offline { background-color: #f59e0b; }
     </style>
 </head>
 <body class="flex flex-col min-h-screen">
@@ -153,6 +159,11 @@
     <!-- Conteúdo -->
     <main id="mainContent" class="hidden flex-grow p-4 sm:p-6 w-full max-w-7xl mx-auto space-y-6">
         
+        <!-- Status Bar -->
+        <div class="text-right text-xs text-slate-500">
+            <span id="connectionStatus"><span class="status-dot"></span> Conectando...</span>
+        </div>
+
         <!-- DASHBOARD -->
         <div id="view-dashboard" class="fade-in space-y-6">
             <div class="flex flex-col sm:flex-row justify-between items-end sm:items-center gap-4">
@@ -305,6 +316,7 @@
 
         // Nome da variável alterado para evitar conflito com a lib global 'supabase'
         let dbClient = null;
+        let dbMode = 'local';
 
         // Inicializa o cliente do Supabase
         try {
@@ -348,14 +360,28 @@
         async function loadData() {
             showLoading(true);
             document.getElementById('loadingText').innerText = "Sincronizando...";
+            
+            // Log para debug
+            console.log("Tentando conectar à nuvem...");
 
             // Promessa de busca na nuvem
             const cloudPromise = new Promise(async (resolve, reject) => {
                 if (!dbClient) return reject("No client");
                 // Tenta buscar a linha com id 1
                 const { data, error } = await dbClient.from('natal_2026').select('conteudo').eq('id', 1).single();
-                if (error && error.code !== 'PGRST116') reject(error); // Erro real (não é 404)
-                resolve(data);
+                
+                if (error) {
+                    if(error.code !== 'PGRST116') {
+                        // Erro real de conexão
+                        console.error("Erro Supabase:", error);
+                        reject(error);
+                    } else {
+                        // Erro 404 (Tabela vazia), não é falha de conexão
+                        resolve(null); 
+                    }
+                } else {
+                    resolve(data);
+                }
             });
 
             // Timeout de 2.5s para não travar
@@ -370,13 +396,18 @@
                     participantsData = data.conteudo.participants || [];
                     monthlyGoals = data.conteudo.goals || monthlyGoals;
                     fineConfig = data.conteudo.fine || fineConfig;
+                    dbMode = 'cloud';
+                    updateStatus('online');
                 } else {
                     console.log("Nenhum dado na nuvem, usando local/demo.");
                     loadFromLocal();
+                    dbMode = 'cloud'; // Ainda estamos conectados, só não tinha dados
                 }
             } catch (e) {
                 console.warn("Falha ou demora na nuvem, carregando dados locais:", e);
                 loadFromLocal();
+                dbMode = 'local';
+                updateStatus('offline');
             }
 
             // Renderiza a tela
@@ -406,11 +437,26 @@
             // Tenta Salvar na Nuvem (Background)
             if (dbClient) {
                 const payload = { participants: participantsData, goals: monthlyGoals, fine: fineConfig };
+                console.log("Salvando na nuvem...");
                 dbClient.from('natal_2026').upsert({ id: 1, tipo: 'dados_gerais', conteudo: payload })
                     .then(({ error }) => {
-                        if (error) console.error("Erro ao salvar na nuvem:", error);
-                        else console.log("Salvo na nuvem com sucesso.");
+                        if (error) { 
+                            console.error("Erro ao salvar na nuvem:", error); 
+                            updateStatus('offline'); 
+                        } else { 
+                            console.log("Salvo na nuvem com sucesso."); 
+                            updateStatus('online'); 
+                        }
                     });
+            }
+        }
+
+        function updateStatus(status) {
+            const el = document.getElementById('connectionStatus');
+            if(el) {
+                el.innerHTML = status === 'online' 
+                    ? '<span class="status-dot online"></span> Online' 
+                    : '<span class="status-dot offline"></span> Offline';
             }
         }
 
