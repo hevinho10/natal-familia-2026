@@ -27,24 +27,16 @@
     <style>
         body { 
             font-family: 'Inter', sans-serif; 
-            background-color: #0f172a; 
-            color: #f1f5f9; 
-        }
-
-        /* Classes Utilitárias */
-        .glass-card {
-            background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            background-color: #0f172a; /* Slate 900 */
+            color: #f1f5f9; /* Slate 100 */
         }
 
         .card {
-            background-color: #1e293b;
-            border: 1px solid #334155;
+            background-color: #1e293b; /* Slate 800 */
+            border: 1px solid #334155; /* Slate 700 */
             border-radius: 0.75rem;
             padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
 
         .tab-btn { 
@@ -56,7 +48,7 @@
             transition: all 0.2s;
         }
         .tab-btn:hover { color: white; background-color: #334155; }
-        .tab-btn.active { background-color: #4f46e5; color: white; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2); }
+        .tab-btn.active { background-color: #4f46e5; color: white; }
 
         /* Scrollbar */
         ::-webkit-scrollbar { height: 8px; width: 8px; }
@@ -66,7 +58,13 @@
 
         /* Badges */
         .status-badge {
-            font-size: 0.75rem; font-weight: 600; padding: 1px 0; width: 100%; display: block; border-radius: 4px; text-align: center;
+            font-size: 0.75rem; 
+            font-weight: 600; 
+            padding: 1px 0; 
+            width: 100%; 
+            display: block; 
+            border-radius: 4px; 
+            text-align: center;
         }
         .bg-paid { background-color: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.2); }
         .bg-partial { background-color: rgba(250, 204, 21, 0.15); color: #facc15; border: 1px solid rgba(250, 204, 21, 0.2); }
@@ -79,122 +77,86 @@
             border: 1px solid #334155;
             color: white;
             border-radius: 0.5rem;
-            padding: 0.6rem 0.75rem;
+            padding: 0.5rem;
             width: 100%;
             font-size: 0.875rem;
-            transition: all 0.2s;
         }
-        .input-dark:focus { outline: none; border-color: #6366f1; ring: 1px #6366f1; background-color: #161b28; }
+        .input-dark:focus { outline: none; border-color: #6366f1; ring: 1px #6366f1; }
 
-        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fadeIn 0.3s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         
         th.sticky-col, td.sticky-col { position: sticky; left: 0; z-index: 20; background-color: #1e293b; box-shadow: 2px 0 5px rgba(0,0,0,0.2); }
         tr:hover td.sticky-col { background-color: #334155; }
         .profile-pic { object-fit: cover; width: 100%; height: 100%; }
 
-        /* Loading */
-        #loadingOverlay { background: rgba(15, 23, 42, 0.95); z-index: 200; position: fixed; inset: 0; display: flex; justify-content: center; align-items: center; color: white; flex-direction: column; backdrop-filter: blur(5px); }
-        
-        /* Permissões */
+        #loadingOverlay { background: rgba(15, 23, 42, 0.95); z-index: 200; position: fixed; inset: 0; display: flex; justify-content: center; align-items: center; color: white; flex-direction: column; }
         body.role-user .admin-only { display: none !important; }
-
-        /* Login Background Especial */
-        .login-bg {
-            background: radial-gradient(circle at top, #1e1b4b, #0f172a);
+        
+        .status-dot {
+            width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px;
         }
+        .status-dot.online { background-color: #22c55e; box-shadow: 0 0 5px #22c55e; }
+        .status-dot.offline { background-color: #f59e0b; }
     </style>
 </head>
 <body class="flex flex-col min-h-screen">
 
     <!-- Loading -->
     <div id="loadingOverlay" class="hidden">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500 mb-4"></div>
-        <p class="animate-pulse text-indigo-300 font-medium">Acessando sistema...</p>
-        <p class="text-xs text-slate-500 mt-2" id="loadingText">Sincronizando...</p>
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-white mb-4"></div>
+        <p class="animate-pulse">Acedendo ao sistema...</p>
+        <button onclick="forceCloseLoading()" class="mt-4 text-xs text-indigo-400 hover:text-white underline">Demorou? Entrar Offline</button>
     </div>
 
-    <!-- TELA DE LOGIN (NOVO DESIGN) -->
-    <div id="loginScreen" class="fixed inset-0 z-[100] login-bg flex flex-col items-center justify-center p-4">
-        
-        <!-- Efeito de luz de fundo -->
-        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-indigo-600/20 rounded-full blur-[100px]"></div>
-
-        <div class="relative w-full max-w-md glass-card rounded-2xl overflow-hidden shadow-2xl fade-in">
-            <!-- Faixa decorativa topo -->
-            <div class="h-2 w-full bg-gradient-to-r from-rose-500 via-indigo-500 to-emerald-500"></div>
-
-            <div class="p-8">
-                <div class="text-center mb-8">
-                    <div class="inline-flex bg-slate-800/50 p-3 rounded-2xl border border-white/10 shadow-lg mb-4 animate-bounce">
-                        <span class="text-4xl">🎅</span>
-                    </div>
-                    <h1 class="text-3xl font-bold text-white tracking-tight">Natal Família <span class="text-indigo-400">2026</span></h1>
-                    <p class="text-slate-400 text-sm mt-2">Gestão Financeira & Metas</p>
+    <!-- LOGIN -->
+    <div id="loginScreen" class="fixed inset-0 z-[100] bg-slate-900 flex flex-col items-center justify-center p-4">
+        <div class="card w-full max-w-md shadow-2xl border-t-4 border-t-indigo-500">
+            <div class="text-center mb-8">
+                <div class="bg-indigo-600 w-16 h-16 rounded-2xl shadow-lg flex items-center justify-center text-4xl mx-auto mb-4">🎅</div>
+                <h1 class="text-2xl font-bold text-white">Natal Família 2026</h1>
+                <p class="text-slate-400 text-sm">Área Restrita da Família</p>
+            </div>
+            
+            <form onsubmit="handleLogin(event)" class="space-y-4">
+                <div>
+                    <label class="text-xs uppercase font-bold text-slate-500 mb-1 block">Usuário</label>
+                    <input type="text" id="loginUser" class="input-dark pl-4 bg-slate-950" placeholder="Ex: admin" required>
                 </div>
-                
-                <form onsubmit="handleLogin(event)" class="space-y-5">
-                    <div class="space-y-1">
-                        <label class="text-xs font-bold text-slate-400 uppercase ml-1">Usuário</label>
-                        <div class="relative">
-                            <i class="ph ph-user absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-lg"></i>
-                            <input type="text" id="loginUser" class="input-dark pl-10 !bg-slate-800/50 !border-slate-600 focus:!border-indigo-500 placeholder-slate-500" placeholder="Ex: admin" required>
-                        </div>
-                    </div>
-
-                    <div class="space-y-1">
-                        <label class="text-xs font-bold text-slate-400 uppercase ml-1">Senha</label>
-                        <div class="relative">
-                            <i class="ph ph-lock-key absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-lg"></i>
-                            <input type="password" id="loginPass" class="input-dark pl-10 !bg-slate-800/50 !border-slate-600 focus:!border-indigo-500 placeholder-slate-500" placeholder="••••••••" required>
-                        </div>
-                    </div>
-
-                    <p id="loginError" class="text-rose-400 text-xs text-center font-bold h-4"></p>
-
-                    <button type="submit" class="w-full bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white font-bold py-3 rounded-xl shadow-lg shadow-indigo-500/30 transition-all transform hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2">
-                        <span>Entrar</span>
-                        <i class="ph ph-arrow-right-bold"></i>
-                    </button>
-                </form>
-            </div>
-            <div class="bg-slate-900/50 p-3 text-center border-t border-white/5">
-                <p class="text-[10px] text-slate-500">Desenvolvido com carinho para a família ❤️</p>
-            </div>
+                <div>
+                    <label class="text-xs uppercase font-bold text-slate-500 mb-1 block">Senha</label>
+                    <input type="password" id="loginPass" class="input-dark pl-4 bg-slate-950" placeholder="••••••••" required>
+                </div>
+                <p id="loginError" class="text-rose-500 text-xs text-center h-4 font-bold"></p>
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-lg transition shadow-lg shadow-indigo-500/20">
+                    Entrar
+                </button>
+            </form>
         </div>
+        <p class="mt-8 text-slate-600 text-xs">Desenvolvido com 🎄 para 2026</p>
     </div>
 
-    <!-- Navbar Principal -->
+    <!-- Navbar -->
     <nav id="mainNavbar" class="hidden bg-slate-800 border-b border-slate-700 sticky top-0 z-50 h-16 shadow-md">
         <div class="max-w-7xl mx-auto px-4 h-full flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <div class="bg-rose-600 p-1.5 rounded-lg shadow-lg flex items-center justify-center w-10 h-10 ring-2 ring-rose-900/50">
+                <div class="bg-rose-600 p-1.5 rounded-lg shadow-lg flex items-center justify-center w-10 h-10">
                     <span class="text-2xl leading-none">🎅</span>
                 </div>
-                <h1 class="text-lg font-bold text-white tracking-tight hidden sm:block">
-                    Natal Família 2026
-                </h1>
+                <h1 class="text-lg font-bold text-white tracking-tight hidden sm:block">Natal Família 2026</h1>
             </div>
             
             <div class="flex items-center gap-4">
                 <div class="flex bg-slate-900/50 p-1 rounded-lg border border-slate-700">
-                    <button onclick="switchTab('dashboard')" id="btn-dashboard" class="tab-btn active">
-                        <i class="ph ph-chart-pie-slice mr-1"></i> <span class="hidden sm:inline">Painel</span>
-                    </button>
-                    <!-- Botão Configurar (Apenas Admin) -->
-                    <button onclick="switchTab('admin')" id="btn-admin" class="tab-btn admin-only">
-                        <i class="ph ph-gear mr-1"></i> <span class="hidden sm:inline">Configurar</span>
-                    </button>
+                    <button onclick="switchTab('dashboard')" id="btn-dashboard" class="tab-btn active"><i class="ph ph-chart-pie-slice mr-1"></i> Painel</button>
+                    <button onclick="switchTab('admin')" id="btn-admin" class="tab-btn admin-only"><i class="ph ph-gear mr-1"></i> Configurar</button>
                 </div>
-                <div class="h-6 w-px bg-slate-700 mx-1"></div>
-                <button onclick="handleLogout()" class="text-slate-400 hover:text-white transition p-2 rounded hover:bg-slate-700" title="Sair">
-                    <i class="ph ph-sign-out text-xl"></i>
-                </button>
+                <button onclick="handleLogout()" class="text-slate-400 hover:text-white transition" title="Sair"><i class="ph ph-sign-out text-xl"></i></button>
             </div>
         </div>
     </nav>
 
-    <!-- Conteúdo Principal -->
+    <!-- Conteúdo -->
     <main id="mainContent" class="hidden flex-grow p-4 sm:p-6 w-full max-w-7xl mx-auto space-y-6">
         
         <!-- Status Bar -->
@@ -202,323 +164,147 @@
             <span id="connectionStatus" class="flex items-center"><div class="w-2 h-2 rounded-full bg-yellow-500 mr-2 animate-pulse"></div> Inicializando...</span>
         </div>
 
-        <!-- ===== VIEW: DASHBOARD ===== -->
+        <!-- DASHBOARD -->
         <div id="view-dashboard" class="fade-in space-y-6">
-            
-            <!-- Header Ações -->
             <div class="flex flex-col sm:flex-row justify-between items-end sm:items-center gap-4">
-                <div>
-                    <h2 class="text-xl font-bold text-white">Visão Geral</h2>
-                    <p class="text-sm text-slate-400">Acompanhamento financeiro em tempo real.</p>
-                </div>
-                <!-- Botões (Admin Only) -->
+                <div><h2 class="text-xl font-bold text-white">Visão Geral Financeira</h2><p class="text-sm text-slate-400">Status financeiro de 2026</p></div>
                 <div class="flex gap-3 admin-only">
-                    <button onclick="resetData()" class="text-xs text-rose-400 hover:text-rose-300 font-medium px-3 py-2 border border-rose-900 rounded hover:bg-rose-900/20 transition flex items-center gap-2">
-                        <i class="ph ph-trash"></i> Resetar
-                    </button>
-                    <label class="cursor-pointer bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300 px-4 py-2 rounded text-xs font-bold uppercase transition flex items-center gap-2">
-                        <i class="ph ph-file-csv text-green-400 text-lg"></i> Importar CSV
-                        <input type="file" id="csvInput" accept=".csv" class="hidden">
-                    </label>
+                    <button onclick="resetData()" class="text-xs text-rose-400 hover:text-rose-300 font-medium px-3 py-2 border border-rose-900 rounded hover:bg-rose-900/20 transition flex items-center gap-2"><i class="ph ph-trash"></i> Resetar</button>
+                    <label class="cursor-pointer bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300 px-4 py-2 rounded text-xs font-bold uppercase transition flex items-center gap-2"><i class="ph ph-file-csv text-green-400 text-lg"></i> Importar CSV<input type="file" id="csvInput" accept=".csv" class="hidden"></label>
                 </div>
             </div>
 
-            <!-- Cards Resumo -->
-            <div id="dashboardSummary" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <!-- JS Preenche -->
-            </div>
+            <div id="dashboardSummary" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"></div>
 
-            <!-- Tabela Detalhada -->
             <div class="card overflow-hidden !p-0 border border-slate-700 shadow-xl">
-                <div class="p-4 border-b border-slate-700 flex flex-col sm:flex-row justify-between items-center bg-slate-800 gap-4">
-                    <h3 class="text-sm font-bold text-white flex items-center gap-2">
-                        <i class="ph ph-users text-indigo-400 text-lg"></i> Detalhamento por Participante
-                    </h3>
-                    <div class="relative w-full sm:w-64">
-                        <i class="ph ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"></i>
-                        <input type="text" id="searchInput" placeholder="Buscar participante..." class="input-dark !w-full !py-1.5 !pl-9 !text-xs !bg-slate-900">
-                    </div>
+                <div class="p-4 border-b border-slate-700 flex justify-between items-center bg-slate-800">
+                    <h3 class="text-sm font-bold text-white flex items-center gap-2"><i class="ph ph-users text-indigo-400"></i> Detalhamento</h3>
+                    <input type="text" id="searchInput" placeholder="Buscar..." class="input-dark !w-48 !py-1 !text-xs">
                 </div>
-                
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
                             <tr class="bg-slate-900 text-slate-400 text-[10px] uppercase font-bold border-b border-slate-700 tracking-wider">
-                                <th class="p-3 sticky-col min-w-[200px] text-slate-300 pl-4 text-xs">Participante</th>
-                                <th class="p-1 text-center w-14">Jan</th>
-                                <th class="p-1 text-center w-14">Fev</th>
-                                <th class="p-1 text-center w-14">Mar</th>
-                                <th class="p-1 text-center w-14">Abr</th>
-                                <th class="p-1 text-center w-14">Mai</th>
-                                <th class="p-1 text-center w-14">Jun</th>
-                                <th class="p-1 text-center w-14">Jul</th>
-                                <th class="p-1 text-center w-14">Ago</th>
-                                <th class="p-1 text-center w-14">Set</th>
-                                <th class="p-1 text-center w-14">Out</th>
-                                <th class="p-1 text-center w-14">Nov</th>
-                                <th class="p-1 text-center w-14">Dez</th>
-                                <!-- Coluna Multa (Dívida) -->
-                                <th class="p-1 text-center bg-rose-900/10 border-l border-rose-900/20 text-rose-400 min-w-[60px]" title="Valor da Multa (A Pagar)">Multa</th>
-                                <!-- Coluna Extra (Pagamento) -->
-                                <th class="p-1 text-center bg-indigo-900/10 border-l border-indigo-900/20 text-indigo-400 min-w-[60px]" title="Valor Extra (Pago)">Extra</th>
+                                <th class="p-2 sticky-col min-w-[200px] text-slate-300 pl-4">Participante</th>
+                                <th class="p-1 text-center w-14">Jan</th><th class="p-1 text-center w-14">Fev</th><th class="p-1 text-center w-14">Mar</th>
+                                <th class="p-1 text-center w-14">Abr</th><th class="p-1 text-center w-14">Mai</th><th class="p-1 text-center w-14">Jun</th>
+                                <th class="p-1 text-center w-14">Jul</th><th class="p-1 text-center w-14">Ago</th><th class="p-1 text-center w-14">Set</th>
+                                <th class="p-1 text-center w-14">Out</th><th class="p-1 text-center w-14">Nov</th><th class="p-1 text-center w-14">Dez</th>
+                                <!-- Multa (Dívida) -->
+                                <th class="p-1 text-center bg-rose-900/10 border-l border-rose-900/20 text-rose-400 min-w-[50px]" title="Valor da Multa (A Pagar)">Multa</th>
+                                <!-- Extra (Pagamento) -->
+                                <th class="p-1 text-center bg-indigo-900/10 border-l border-indigo-900/20 text-indigo-400 min-w-[50px]" title="Valor Extra (Pago)">Extra</th>
                                 <th class="p-2 text-right bg-slate-800/50 min-w-[80px]">Total</th>
                                 <th class="p-2 text-right bg-slate-800/50 border-r border-slate-700 min-w-[80px]">Falta</th>
-                                <!-- Coluna Editar (Admin Only via JS) -->
-                                <th class="p-2 text-center sticky right-0 bg-slate-900 z-10 w-14 shadow-[-5px_0_10px_rgba(0,0,0,0.2)] admin-only">Ação</th>
+                                <th class="p-2 text-center sticky right-0 bg-slate-900 z-10 w-12 shadow-[-5px_0_10px_rgba(0,0,0,0.2)] admin-only">Edit</th>
                             </tr>
                         </thead>
-                        <tbody id="participantsTableBody" class="text-sm divide-y divide-slate-700 bg-slate-800">
-                            <!-- JS -->
-                        </tbody>
+                        <tbody id="participantsTableBody" class="text-sm divide-y divide-slate-700 bg-slate-800"></tbody>
                     </table>
                 </div>
             </div>
 
-            <!-- Gráficos -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Gráfico Status -->
                 <div class="card lg:col-span-1 flex flex-col items-center justify-center">
-                    <h3 class="text-sm font-bold text-slate-400 w-full mb-4 flex items-center gap-2 border-b border-slate-700 pb-2">
-                        <i class="ph ph-chart-donut text-indigo-400"></i> Status de Quitação
-                    </h3>
+                    <h3 class="text-sm font-bold text-slate-400 w-full mb-4 flex items-center gap-2 border-b border-slate-700 pb-2"><i class="ph ph-chart-donut text-indigo-400"></i> Status de Quitação</h3>
                     <div class="relative w-48 h-48 my-4">
-                        <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-                            <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#334155" stroke-width="2" />
-                            <path id="pieChartPath" d="" fill="none" stroke="#6366f1" stroke-width="2" stroke-dasharray="0, 100" class="transition-all duration-1000 ease-out" />
-                        </svg>
-                        <div class="absolute inset-0 flex flex-col items-center justify-center">
-                            <span id="pieChartPercent" class="text-3xl font-bold text-white">0%</span>
-                            <span class="text-xs text-slate-500 uppercase tracking-widest font-bold">Pago</span>
-                        </div>
+                        <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36"><path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#334155" stroke-width="2" /><path id="pieChartPath" d="" fill="none" stroke="#6366f1" stroke-width="2" stroke-dasharray="0, 100" class="transition-all duration-1000" /></svg>
+                        <div class="absolute inset-0 flex flex-col items-center justify-center"><span id="pieChartPercent" class="text-3xl font-bold text-white">0%</span><span class="text-xs text-slate-500 uppercase tracking-widest font-bold">Pago</span></div>
                     </div>
                     <div class="grid grid-cols-2 gap-4 w-full mt-2">
-                        <div class="bg-slate-900 p-2 rounded text-center border border-slate-700">
-                            <span id="countOk" class="block text-lg font-bold text-emerald-400">0</span>
-                            <span class="text-[10px] uppercase text-slate-500 font-bold">Em dia</span>
-                        </div>
-                        <div class="bg-slate-900 p-2 rounded text-center border border-slate-700">
-                            <span id="countPending" class="block text-lg font-bold text-rose-400">0</span>
-                            <span class="text-[10px] uppercase text-slate-500 font-bold">Pendente</span>
-                        </div>
+                        <div class="bg-slate-900 p-2 rounded text-center border border-slate-700"><span id="countOk" class="block text-lg font-bold text-emerald-400">0</span><span class="text-[10px] uppercase text-slate-500 font-bold">Em dia</span></div>
+                        <div class="bg-slate-900 p-2 rounded text-center border border-slate-700"><span id="countPending" class="block text-lg font-bold text-rose-400">0</span><span class="text-[10px] uppercase text-slate-500 font-bold">Pendente</span></div>
                     </div>
                 </div>
-
-                <!-- Barra Progresso -->
                 <div class="card lg:col-span-2 flex flex-col justify-between">
                     <div>
-                        <h3 class="text-sm font-bold text-slate-400 mb-6 flex items-center gap-2 border-b border-slate-700 pb-2">
-                            <i class="ph ph-trend-up text-emerald-400"></i> Evolução da Arrecadação
-                        </h3>
-                        <div class="flex justify-between text-sm text-slate-300 mb-2">
-                            <span>Progresso Atual</span>
-                            <span id="metaLabel" class="font-mono text-slate-400">Meta: R$ 0</span>
-                        </div>
-                        <div class="w-full bg-slate-900 rounded-full h-8 border border-slate-700 relative overflow-hidden">
-                            <div id="mainProgressBar" class="bg-gradient-to-r from-emerald-600 to-teal-500 h-full flex items-center justify-end pr-3 text-xs font-bold text-white shadow-[0_0_10px_rgba(16,185,129,0.3)] transition-all duration-1000" style="width: 0%">
-                                0%
-                            </div>
-                        </div>
+                        <h3 class="text-sm font-bold text-slate-400 mb-6 flex items-center gap-2 border-b border-slate-700 pb-2"><i class="ph ph-trend-up text-emerald-400"></i> Evolução da Arrecadação</h3>
+                        <div class="flex justify-between text-sm text-slate-300 mb-2"><span>Progresso Atual</span><span id="metaLabel" class="font-mono text-slate-400">Meta: R$ 0</span></div>
+                        <div class="w-full bg-slate-900 rounded-full h-8 border border-slate-700 relative overflow-hidden"><div id="mainProgressBar" class="bg-gradient-to-r from-emerald-600 to-teal-500 h-full flex items-center justify-end pr-3 text-xs font-bold text-white shadow-[0_0_10px_rgba(16,185,129,0.3)] transition-all duration-1000" style="width: 0%">0%</div></div>
                     </div>
                     <div class="grid grid-cols-3 gap-4 mt-8">
-                        <div class="bg-slate-900 p-4 rounded-lg border border-slate-700 text-center">
-                            <p class="text-[10px] text-slate-500 font-bold uppercase mb-1">Esperado Total</p>
-                            <p id="summaryTotalExpected" class="text-lg font-bold text-white">R$ 0</p>
-                        </div>
-                        <div class="bg-slate-900 p-4 rounded-lg border border-slate-700 text-center">
-                            <p class="text-[10px] text-slate-500 font-bold uppercase mb-1">Confirmado</p>
-                            <p id="summaryTotalPaid" class="text-lg font-bold text-emerald-400">R$ 0</p>
-                        </div>
-                        <div class="bg-slate-900 p-4 rounded-lg border border-slate-700 text-center">
-                            <p class="text-[10px] text-slate-500 font-bold uppercase mb-1">Em Aberto</p>
-                            <p id="summaryTotalMissing" class="text-lg font-bold text-rose-400">R$ 0</p>
-                        </div>
+                        <div class="bg-slate-900 p-4 rounded-lg border border-slate-700 text-center"><p class="text-[10px] text-slate-500 font-bold uppercase mb-1">Esperado Total</p><p id="summaryTotalExpected" class="text-lg font-bold text-white">R$ 0</p></div>
+                        <div class="bg-slate-900 p-4 rounded-lg border border-slate-700 text-center"><p class="text-[10px] text-slate-500 font-bold uppercase mb-1">Confirmado</p><p id="summaryTotalPaid" class="text-lg font-bold text-emerald-400">R$ 0</p></div>
+                        <div class="bg-slate-900 p-4 rounded-lg border border-slate-700 text-center"><p class="text-[10px] text-slate-500 font-bold uppercase mb-1">Em Aberto</p><p id="summaryTotalMissing" class="text-lg font-bold text-rose-400">R$ 0</p></div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- ===== VIEW: ADMIN ===== -->
+        <!-- ADMIN -->
         <div id="view-admin" class="hidden fade-in max-w-5xl mx-auto space-y-8">
-            <h2 class="text-2xl font-bold text-white border-b border-slate-700 pb-4">Configurações do Sistema</h2>
-
+            <h2 class="text-2xl font-bold text-white">Configurações</h2>
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                
-                <!-- 1. Metas Mensais -->
                 <div class="card border-l-4 border-l-indigo-500">
-                    <h3 class="text-base font-bold text-white mb-2 flex items-center gap-2">
-                        <i class="ph ph-currency-dollar text-indigo-400"></i> Metas Mensais (R$)
-                    </h3>
-                    <p class="text-xs text-slate-400 mb-6">Defina quanto cada pessoa deve pagar por mês.</p>
-
-                    <div class="grid grid-cols-3 sm:grid-cols-4 gap-3" id="monthlyGoalsContainer">
-                        <!-- JS Inputs -->
-                    </div>
-                    
+                    <h3 class="text-base font-bold text-white mb-2 flex items-center gap-2"><i class="ph ph-currency-dollar text-indigo-400"></i> Metas Mensais</h3>
+                    <p class="text-xs text-slate-400 mb-6">Valores a pagar por mês.</p>
+                    <div class="grid grid-cols-3 sm:grid-cols-4 gap-3" id="monthlyGoalsContainer"></div>
                     <div class="mt-6 pt-4 border-t border-slate-700 flex justify-between items-center">
                         <div class="text-xs text-slate-400">Total Anual: <span id="totalAnnualGoal" class="text-white font-mono font-bold ml-1">R$ 0,00</span></div>
-                        <button onclick="saveMonthlyGoals()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold uppercase py-2 px-4 rounded transition shadow-lg">Salvar Metas</button>
+                        <button onclick="saveMonthlyGoals()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold uppercase py-2 px-4 rounded transition shadow-lg">Salvar</button>
                     </div>
                 </div>
-
-                <!-- Coluna Direita -->
                 <div class="space-y-6">
-                    
-                    <!-- 2. Cadastro Rápido -->
                     <div class="card border-l-4 border-l-emerald-500">
-                        <h3 class="text-base font-bold text-white mb-4 flex items-center gap-2">
-                            <i class="ph ph-user-plus text-emerald-400"></i> Novo Participante
-                        </h3>
-                        
+                        <h3 class="text-base font-bold text-white mb-4 flex items-center gap-2"><i class="ph ph-user-plus text-emerald-400"></i> Novo Participante</h3>
                         <div class="space-y-3">
-                            <input type="text" id="newUserName" placeholder="Nome Completo" class="input-dark bg-slate-900">
+                            <input type="text" id="newUserName" placeholder="Nome Completo" class="input-dark">
                             <div class="flex gap-2 items-center">
-                                <!-- Botão de Upload de Foto -->
-                                <label class="cursor-pointer bg-slate-700 hover:bg-slate-600 text-white p-2 rounded text-xs flex items-center justify-center min-w-[40px] border border-slate-600 transition" title="Escolher Foto">
-                                    <i class="ph ph-camera text-lg"></i>
-                                    <input type="file" id="newUserPhotoFile" accept="image/*" class="hidden" onchange="previewAddUserImage(this)">
-                                </label>
-                                <span id="newUserPhotoName" class="text-xs text-slate-500 truncate max-w-[100px] hidden">Foto selecionada</span>
-
-                                <select id="newUserBirthday" class="input-dark text-xs flex-grow bg-slate-900">
-                                    <option value="">Mês do Aniversário</option>
-                                    <option value="0">Janeiro</option><option value="1">Fevereiro</option><option value="2">Março</option>
-                                    <option value="3">Abril</option><option value="4">Maio</option><option value="5">Junho</option>
-                                    <option value="6">Julho</option><option value="7">Agosto</option><option value="8">Setembro</option>
-                                    <option value="9">Outubro</option><option value="10">Novembro</option><option value="11">Dezembro</option>
-                                </select>
+                                <label class="cursor-pointer bg-slate-700 hover:bg-slate-600 text-white p-2 rounded text-xs flex items-center justify-center min-w-[40px] border border-slate-600 transition" title="Escolher Foto"><i class="ph ph-camera text-lg"></i><input type="file" id="newUserPhotoFile" accept="image/*" class="hidden" onchange="previewAddUserImage(this)"></label>
+                                <span id="newUserPhotoName" class="text-xs text-slate-500 truncate max-w-[100px] hidden">Foto OK</span>
+                                <select id="newUserBirthday" class="input-dark text-xs flex-grow"><option value="">Mês Aniversário</option><option value="0">Janeiro</option><option value="1">Fevereiro</option><option value="2">Março</option><option value="3">Abril</option><option value="4">Maio</option><option value="5">Junho</option><option value="6">Julho</option><option value="7">Agosto</option><option value="8">Setembro</option><option value="9">Outubro</option><option value="10">Novembro</option><option value="11">Dezembro</option></select>
                             </div>
-                            <button onclick="addParticipant()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-2.5 rounded font-bold transition shadow-lg">Adicionar</button>
+                            <button onclick="addParticipant()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-2 rounded font-bold transition">Adicionar</button>
                         </div>
-                        
-                        <!-- Mini Lista -->
-                        <div class="mt-6 border-t border-slate-700 pt-4">
-                            <h4 class="text-xs font-bold text-slate-500 uppercase mb-2">Cadastrados</h4>
-                            <div class="overflow-y-auto max-h-40 rounded border border-slate-700">
-                                <table class="w-full text-left">
-                                    <tbody id="adminUsersTableBody" class="divide-y divide-slate-700 text-xs text-slate-300 bg-slate-900"></tbody>
-                                </table>
-                            </div>
-                        </div>
+                        <div class="mt-6 border-t border-slate-700 pt-4"><h4 class="text-xs font-bold text-slate-500 uppercase mb-2">Cadastrados</h4><div class="overflow-y-auto max-h-40 rounded border border-slate-700"><table class="w-full text-left"><tbody id="adminUsersTableBody" class="divide-y divide-slate-700 text-xs text-slate-300 bg-slate-900"></tbody></table></div></div>
                     </div>
-
-                    <!-- 3. Multas -->
                     <div class="card border-l-4 border-l-rose-500">
-                        <h3 class="text-base font-bold text-white mb-2 flex items-center gap-2">
-                            <i class="ph ph-siren text-rose-400"></i> Auditoria de Multas
-                        </h3>
-                        <p class="text-[10px] text-slate-400 mb-4 bg-slate-900 p-2 rounded border border-slate-700">
-                            <strong>Regra:</strong> Quem não tiver pago o mínimo até a data limite recebe uma <strong>Multa (Dívida)</strong>.
-                        </p>
-
+                        <h3 class="text-base font-bold text-white mb-2 flex items-center gap-2"><i class="ph ph-siren text-rose-400"></i> Auditoria de Multas</h3>
+                        <p class="text-[10px] text-slate-400 mb-4 bg-slate-900 p-2 rounded">Quem não pagou o mínimo até a data recebe multa (dívida).</p>
                         <div class="space-y-3">
-                            <div>
-                                <label class="text-[10px] text-slate-500 font-bold uppercase block mb-1">Data Limite (Prazo)</label>
-                                <div class="relative">
-                                    <i class="ph ph-calendar absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                                    <input type="text" id="fineDeadline" class="input-dark bg-slate-900 pl-10" placeholder="Ex: 20/05/2026" onchange="saveFineConfig()">
-                                </div>
-                            </div>
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label class="text-[10px] text-slate-500 font-bold uppercase block mb-1">Mínimo Pago (R$)</label>
-                                    <input type="number" id="fineThreshold" class="input-dark bg-slate-900" value="50" onchange="saveFineConfig()">
-                                </div>
-                                <div>
-                                    <label class="text-[10px] text-slate-500 font-bold uppercase block mb-1">Multa (R$)</label>
-                                    <input type="number" id="fineValue" class="input-dark bg-slate-900 border-rose-500/30 text-rose-400 font-bold" value="15" onchange="saveFineConfig()">
-                                </div>
-                            </div>
+                            <div><label class="text-[10px] text-slate-500 font-bold uppercase block mb-1">Data Limite</label><input type="text" id="fineDeadline" class="input-dark bg-slate-900" placeholder="Ex: 20/05/2026" onchange="saveFineConfig()"></div>
+                            <div class="grid grid-cols-2 gap-4"><div><label class="text-[10px] text-slate-500 font-bold uppercase block mb-1">Mínimo (R$)</label><input type="number" id="fineThreshold" class="input-dark" value="50" onchange="saveFineConfig()"></div><div><label class="text-[10px] text-slate-500 font-bold uppercase block mb-1">Multa (R$)</label><input type="number" id="fineValue" class="input-dark border-rose-500/30 text-rose-400" value="15" onchange="saveFineConfig()"></div></div>
                         </div>
-                        
-                        <div class="mt-4 pt-3 border-t border-slate-700">
-                            <button onclick="manualFineCheck()" class="w-full bg-rose-600/10 border border-rose-600/50 hover:bg-rose-600 hover:text-white text-rose-300 text-xs font-bold uppercase py-2.5 rounded transition flex items-center justify-center gap-2 group">
-                                <i class="ph ph-gavel text-lg group-hover:text-white"></i> Verificar e Aplicar
-                            </button>
-                            <p id="fineFeedback" class="text-center text-xs mt-2 text-slate-500 h-4"></p>
-                        </div>
+                        <div class="mt-4 pt-3 border-t border-slate-700"><button onclick="manualFineCheck()" class="w-full bg-rose-900/30 border border-rose-500/30 hover:bg-rose-900/50 text-rose-200 text-xs font-bold uppercase py-2 rounded transition flex items-center justify-center gap-2"><i class="ph ph-gavel"></i> Verificar Agora</button><p id="fineFeedback" class="text-center text-xs mt-2 text-slate-500 h-4"></p></div>
                     </div>
                 </div>
             </div>
         </div>
-
     </main>
 
     <!-- Modal Editar -->
-    <div id="editPaymentModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center px-4 bg-slate-900/90 backdrop-blur-sm fade-in">
-        <div class="bg-slate-800 rounded-lg shadow-2xl border border-slate-600 w-full max-w-xl overflow-hidden transform scale-100 transition-all">
+    <div id="editPaymentModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center px-4 bg-slate-900/80 backdrop-blur-sm fade-in">
+        <div class="bg-slate-800 rounded-lg shadow-2xl border border-slate-600 w-full max-w-xl overflow-hidden">
             <div class="bg-slate-900 px-6 py-4 border-b border-slate-700 flex justify-between items-center">
                 <h3 class="text-lg font-bold text-white flex items-center gap-2"><i class="ph ph-pencil-simple text-indigo-400"></i> Editar Dados</h3>
-                <button onclick="closeEditModal()" class="text-slate-400 hover:text-white transition bg-slate-800 p-1 rounded-full"><i class="ph ph-x text-xl"></i></button>
+                <button onclick="closeEditModal()" class="text-slate-400 hover:text-white transition"><i class="ph ph-x text-xl"></i></button>
             </div>
-            
             <div class="p-6 overflow-y-auto max-h-[80vh]">
-                <!-- Info do Usuário -->
                 <div class="mb-6 pb-4 border-b border-slate-700">
-                    <h4 class="text-xs font-bold uppercase text-slate-500 mb-3">Informações Pessoais</h4>
-                    <div class="flex gap-4 items-center">
-                        <!-- Foto Clicável para Editar -->
-                        <div class="relative w-16 h-16 rounded-full bg-slate-700 flex-shrink-0 border-2 border-slate-600 overflow-hidden cursor-pointer group hover:border-indigo-500 transition" onclick="document.getElementById('editPhotoFile').click()" title="Alterar Foto">
+                    <div class="flex gap-4 items-start">
+                        <div class="relative w-16 h-16 rounded-full bg-slate-700 flex-shrink-0 border-2 border-slate-600 overflow-hidden cursor-pointer group" onclick="document.getElementById('editPhotoFile').click()">
                             <img id="modalAvatarImg" class="profile-pic hidden" src="" alt="">
                             <div id="modalAvatarText" class="absolute inset-0 flex items-center justify-center text-2xl font-bold text-slate-400">A</div>
-                            <!-- Overlay de Edição -->
-                            <div class="absolute inset-0 bg-black/50 hidden group-hover:flex items-center justify-center text-white text-xs">
-                                <i class="ph ph-camera text-xl"></i>
-                            </div>
+                            <div class="absolute inset-0 bg-black/50 hidden group-hover:flex items-center justify-center text-white text-xs"><i class="ph ph-camera"></i></div>
                             <input type="file" id="editPhotoFile" accept="image/*" class="hidden" onchange="previewEditUserImage(this)">
                         </div>
-
-                        <div class="space-y-2 flex-grow">
+                        <div class="space-y-3 flex-grow">
+                            <div><label class="text-[10px] text-slate-400 uppercase font-bold">Mês Aniversário</label><select id="editBirthdayMonth" class="input-dark text-xs p-1.5"><option value="-1">Sem registro</option><option value="0">Janeiro</option><option value="1">Fevereiro</option><option value="2">Março</option><option value="3">Abril</option><option value="4">Maio</option><option value="5">Junho</option><option value="6">Julho</option><option value="7">Agosto</option><option value="8">Setembro</option><option value="9">Outubro</option><option value="10">Novembro</option><option value="11">Dezembro</option></select></div>
                             <h2 class="text-xl font-bold text-white" id="modalParticipantName">Nome</h2>
-                            <div>
-                                <select id="editBirthdayMonth" class="input-dark text-xs p-1.5 w-full sm:w-48 bg-slate-900 border-slate-600">
-                                    <option value="-1">Sem Mês de Aniversário</option>
-                                    <option value="0">Janeiro</option><option value="1">Fevereiro</option><option value="2">Março</option>
-                                    <option value="3">Abril</option><option value="4">Maio</option><option value="5">Junho</option>
-                                    <option value="6">Julho</option><option value="7">Agosto</option><option value="8">Setembro</option>
-                                    <option value="9">Outubro</option><option value="10">Novembro</option><option value="11">Dezembro</option>
-                                </select>
-                            </div>
                         </div>
                     </div>
                 </div>
-                
                 <input type="hidden" id="editParticipantIndex">
-
                 <h4 class="text-xs font-bold uppercase text-slate-500 mb-3">Pagamentos Mensais</h4>
-                <div class="grid grid-cols-3 sm:grid-cols-4 gap-3 mb-6" id="editMonthsContainer">
-                    <!-- JS Inputs -->
-                </div>
-
+                <div class="grid grid-cols-3 sm:grid-cols-4 gap-3 mb-6" id="editMonthsContainer"></div>
                 <div class="grid grid-cols-2 gap-4">
-                    <!-- Campo MULTA (DÍVIDA) -->
-                    <div class="bg-rose-900/10 p-3 rounded-lg border border-rose-500/20">
-                        <label class="text-xs font-bold uppercase text-rose-400 block mb-2">Multa (Dívida)</label>
-                        <div class="flex items-center gap-2">
-                            <span class="text-slate-500 text-sm">R$</span>
-                            <input type="number" id="editFineValue" class="bg-slate-900 border border-rose-500/30 text-rose-400 font-bold rounded w-full p-1.5 text-right focus:border-rose-500 outline-none">
-                        </div>
-                    </div>
-
-                    <!-- Campo EXTRA (PAGAMENTO) -->
-                    <div class="bg-indigo-900/10 p-3 rounded-lg border border-indigo-500/20">
-                        <label class="text-xs font-bold uppercase text-indigo-400 block mb-2">Extra Pago (Crédito)</label>
-                        <div class="flex items-center gap-2">
-                            <span class="text-slate-500 text-sm">R$</span>
-                            <input type="number" id="editExtraValue" class="bg-slate-900 border border-indigo-500/30 text-indigo-400 font-bold rounded w-full p-1.5 text-right focus:border-indigo-500 outline-none">
-                        </div>
-                    </div>
-                </div>
-                
-                <div id="fineWarning" class="hidden mt-4 p-3 bg-rose-500/10 border border-rose-500/30 rounded text-xs text-rose-300 text-center animate-pulse font-medium">
-                    ⚠️ Atenção: Pagamento em atraso detectado.<br>Uma multa de R$ <span id="fineWarnValue"></span> será lançada como dívida.
+                    <div class="bg-rose-900/10 p-3 rounded border border-rose-500/20"><label class="text-xs font-bold uppercase text-rose-400 block mb-2">Multa (Dívida)</label><div class="flex items-center gap-2"><span class="text-slate-500 text-sm">R$</span><input type="number" id="editFineValue" class="bg-slate-900 border border-rose-500/30 text-rose-400 font-bold rounded w-full p-1 text-right focus:border-rose-500 outline-none"></div></div>
+                    <div class="bg-indigo-900/10 p-3 rounded border border-indigo-500/20"><label class="text-xs font-bold uppercase text-indigo-400 block mb-2">Extra Pago (Crédito)</label><div class="flex items-center gap-2"><span class="text-slate-500 text-sm">R$</span><input type="number" id="editExtraValue" class="bg-slate-900 border border-indigo-500/30 text-indigo-400 font-bold rounded w-full p-1 text-right focus:border-indigo-500 outline-none"></div></div>
                 </div>
             </div>
-
             <div class="bg-slate-900 px-6 py-4 flex justify-end gap-3 border-t border-slate-700">
                 <button onclick="closeEditModal()" class="px-4 py-2 rounded text-sm font-bold text-slate-400 hover:text-white hover:bg-slate-800 transition">Cancelar</button>
-                <button onclick="saveEditModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded text-sm font-bold shadow-lg shadow-indigo-500/20 transition flex items-center gap-2">
-                    <i class="ph ph-check"></i> Salvar Alterações
-                </button>
+                <button onclick="saveEditModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded text-sm font-bold shadow-lg transition">Salvar Alterações</button>
             </div>
         </div>
     </div>
@@ -526,7 +312,7 @@
     <script>
         // CONFIGURAÇÕES SUPABASE
         const SUPABASE_URL = 'https://nctjowqvtbejbipxhhd.supabase.co'; 
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5jdGpvd3F1YnRmYmVqaXB4aGhkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODk1NjYsImV4cCI6MjA4Mjk2NTU2Nn0.63GaaShzKx0oO6n4ci0Rj3onmenYycjcE0EN7vVvErE'; 
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5jdGpvd3F1YnRmYmVqaXB4aGhkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODk1NjYsImV4cCI6MjA4Mjk2NTU2Nn0.63GaaShzKx0oO6n4ci0Rj3onmenYycjcE0EN7vVvErE';
         
         let dbClient = null;
         let dbMode = 'local';
@@ -576,57 +362,46 @@
             document.getElementById('mainContent').classList.remove('hidden');
             document.body.className = `flex flex-col min-h-screen role-${currentUserRole}`;
             
-            // Inicia fluxo de dados
+            // Inicia fluxo de dados (SEM ESPERAR)
             initDatePickers();
-            loadDataChain();
+            startDataLoading();
         }
 
         function handleLogout() { location.reload(); }
+        function initSystem() { initDatePickers(); startDataLoading(); }
 
-        // LÓGICA DE DADOS
-        async function loadDataChain() {
-            showLoading(true);
-            document.getElementById('loadingText').innerText = "Carregando dados...";
-            
-            // 1. Carrega dados locais (Instantâneo)
+        // --- NOVA LÓGICA DE CARREGAMENTO "WHATSAPP STYLE" ---
+        async function startDataLoading() {
+            // 1. Carrega local (instantâneo) e renderiza
             loadFromLocal();
+            renderUI();
 
-            // 2. Se tiver cliente de banco, tenta atualizar
+            // 2. Tenta atualizar da nuvem em background
             if (dbClient) {
-                // Timeout de 2.5s para não prender o usuário
-                const cloudPromise = new Promise(async (resolve, reject) => {
-                    const { data, error } = await dbClient.from('natal_2026').select('conteudo').eq('id', 1).single();
-                    if(error && error.code !== 'PGRST116') reject(error);
-                    resolve(data);
-                });
-
-                const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject("timeout"), 2500));
-
+                updateStatus('conectando');
                 try {
-                    const data = await Promise.race([cloudPromise, timeoutPromise]);
+                    const { data, error } = await dbClient.from('natal_2026').select('conteudo').eq('id', 1).single();
+                    
                     if (data && data.conteudo) {
                         participantsData = data.conteudo.participants || [];
                         monthlyGoals = data.conteudo.goals || monthlyGoals;
                         fineConfig = data.conteudo.fine || fineConfig;
-                        dbMode = 'cloud';
+                        
+                        // Atualiza a tela com dados da nuvem
+                        renderUI();
                         updateStatus('online');
+                        console.log("Sincronizado com a nuvem.");
                     } else {
-                        // Banco vazio
+                        // Se não tem nada na nuvem, mantém o local
                         updateStatus('online');
                     }
                 } catch (e) {
-                    console.warn("Erro nuvem:", e);
+                    console.warn("Erro ao sincronizar nuvem, mantendo local:", e);
                     updateStatus('offline');
                 }
             } else {
                 updateStatus('offline');
             }
-
-            // 3. Renderiza a tela
-            renderUI();
-            
-            // Fecha loading
-            setTimeout(() => showLoading(false), 500);
         }
 
         function loadFromLocal() {
@@ -638,7 +413,7 @@
                 const f = localStorage.getItem('natal2026_fine');
                 if(f) fineConfig = JSON.parse(f);
             } catch (e) {
-                console.error("Erro ao ler localstorage", e);
+                console.error("Erro leitura local", e);
             }
         }
 
@@ -648,8 +423,9 @@
             localStorage.setItem('natal2026_goals', JSON.stringify(monthlyGoals));
             localStorage.setItem('natal2026_fine', JSON.stringify(fineConfig));
 
-            // Tenta Salvar Nuvem (Sem bloquear a tela)
+            // Salva Nuvem (Background)
             if (dbClient) {
+                updateStatus('salvando');
                 const payload = { participants: participantsData, goals: monthlyGoals, fine: fineConfig };
                 dbClient.from('natal_2026').upsert({ id: 1, tipo: 'dados_gerais', conteudo: payload })
                     .then(({ error }) => {
@@ -658,52 +434,53 @@
                     });
             }
         }
-
-        function updateStatus(status) {
+        
+        function updateStatus(state) {
             const el = document.getElementById('connectionStatus');
-            if (el) {
-                const color = status === 'online' ? 'bg-emerald-500' : 'bg-amber-500';
-                const text = status === 'online' ? 'Online' : 'Offline';
-                el.innerHTML = `<span class="w-2 h-2 rounded-full ${color} inline-block mr-2"></span> ${text}`;
+            if(!el) return;
+            if (state === 'online') el.innerHTML = '<span class="status-dot online"></span> Online';
+            else if (state === 'offline') el.innerHTML = '<span class="status-dot offline"></span> Offline';
+            else if (state === 'conectando' || state === 'salvando') el.innerHTML = '<span class="status-dot offline animate-pulse"></span> Sincronizando...';
+        }
+
+        function forceCloseLoading() {
+            document.getElementById('loadingOverlay').classList.add('hidden');
+        }
+
+        function resetData() {
+            if(confirm("ATENÇÃO: Apagar TODOS os dados?")) {
+                 participantsData = []; monthlyGoals = [0,0,0,0,0,0,0,0,0,0,0,0];
+                 calculateTotalsAndRender(); saveData();
             }
         }
 
-        // --- 5. RENDERIZAÇÃO E LÓGICA DE NEGÓCIO ---
+        // === CÁLCULOS E RENDERIZAÇÃO ===
         function renderUI() {
             renderMonthlyGoalsInputs();
             updateTotalAnnualGoalUI();
-            
             document.getElementById('fineThreshold').value = fineConfig.threshold;
             document.getElementById('fineValue').value = fineConfig.value;
-            
             if(document.getElementById('fineDeadline')._flatpickr) {
                 document.getElementById('fineDeadline')._flatpickr.setDate(fineConfig.deadline);
             }
-
             calculateTotalsAndRender();
         }
 
         function calculateTotalsAndRender() {
             const baseTotalGoal = monthlyGoals.reduce((a,b) => a+b, 0);
-
             participantsData.forEach(p => {
                 if (p.fine === undefined) p.fine = 0;
                 let personalGoal = baseTotalGoal;
                 let paidSum = 0;
-                
                 if (p.birthdayMonth !== null && p.birthdayMonth >= 0 && p.birthdayMonth < 12) {
                     personalGoal -= monthlyGoals[p.birthdayMonth];
                 }
-                
                 p.months.forEach(val => paidSum += val);
-                
                 p.totalPaid = paidSum + (p.extra || 0); 
                 p.totalGoal = personalGoal + (p.fine || 0); 
-                
                 let missing = p.totalGoal - p.totalPaid;
                 p.missing = missing < 0 ? 0 : missing;
             });
-            
             updateDashboard();
         }
 
@@ -736,7 +513,7 @@
 
         function renderTable(data) {
             const tbody = document.getElementById('participantsTableBody'); tbody.innerHTML = '';
-            if (data.length === 0) { tbody.innerHTML = `<tr><td colspan="17" class="p-8 text-center text-slate-500">Nenhum dado.</td></tr>`; return; }
+            if (data.length === 0) { tbody.innerHTML = `<tr><td colspan="17" class="p-8 text-center text-slate-500">Nenhum dado. Cadastre alguém.</td></tr>`; return; }
 
             data.forEach((p, index) => {
                 let monthsHTML = '';
@@ -856,6 +633,14 @@
                  newData.push({ id: i, name: c[nIdx], months: mv, extra: parseFloat(c[eIdx])||0, fine: 0, totalPaid: 0, missing: 0, photo: '', birthdayMonth: null });
              }
              participantsData = newData; calculateTotalsAndRender(); saveData(); alert("Importado!");
+        }
+        function updateStatus(status) {
+            const el = document.getElementById('connectionStatus');
+            if(el) {
+                el.innerHTML = status === 'online' 
+                    ? '<span class="status-dot online"></span> Online' 
+                    : '<span class="status-dot offline"></span> Offline';
+            }
         }
     </script>
 </body>
