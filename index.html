@@ -90,14 +90,32 @@
         tr:hover td.sticky-col { background-color: #334155; }
         .profile-pic { object-fit: cover; width: 100%; height: 100%; }
 
-        #loadingOverlay { background: rgba(15, 23, 42, 0.95); z-index: 200; position: fixed; inset: 0; display: flex; justify-content: center; align-items: center; color: white; flex-direction: column; }
-        body.role-user .admin-only { display: none !important; }
-        
-        .status-dot {
-            width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px;
+        /* Loading Overlay com Debug */
+        #loadingOverlay { 
+            background: rgba(15, 23, 42, 0.98); 
+            z-index: 200; 
+            position: fixed; 
+            inset: 0; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            color: white; 
+            flex-direction: column; 
         }
-        .status-dot.online { background-color: #22c55e; box-shadow: 0 0 5px #22c55e; }
-        .status-dot.offline { background-color: #f59e0b; }
+        #debugLog {
+            margin-top: 20px;
+            font-family: monospace;
+            font-size: 0.7rem;
+            color: #94a3b8;
+            max-width: 80%;
+            text-align: center;
+            background: rgba(0,0,0,0.3);
+            padding: 10px;
+            border-radius: 8px;
+            max-height: 100px;
+            overflow-y: auto;
+        }
+        body.role-user .admin-only { display: none !important; }
     </style>
 </head>
 <body class="flex flex-col min-h-screen">
@@ -105,8 +123,10 @@
     <!-- Loading -->
     <div id="loadingOverlay" class="hidden">
         <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-white mb-4"></div>
-        <p class="animate-pulse">Conectando ao banco de dados...</p>
-        <p class="text-xs text-slate-400 mt-2" id="loadingText">Aguarde...</p>
+        <p class="animate-pulse font-bold text-lg">Carregando...</p>
+        <p class="text-xs text-slate-400 mt-2" id="loadingText">Iniciando sistema...</p>
+        <!-- Log Visível para Debug -->
+        <div id="debugLog"></div>
     </div>
 
     <!-- LOGIN -->
@@ -160,8 +180,8 @@
     <main id="mainContent" class="hidden flex-grow p-4 sm:p-6 w-full max-w-7xl mx-auto space-y-6">
         
         <!-- Status Bar -->
-        <div class="text-right text-xs text-slate-500">
-            <span id="connectionStatus"><span class="status-dot"></span> Conectando...</span>
+        <div class="text-right text-xs text-slate-500 flex justify-end items-center gap-2">
+            <span id="connectionStatus" class="flex items-center"><div class="w-2 h-2 rounded-full bg-yellow-500 mr-2 animate-pulse"></div> Inicializando...</span>
         </div>
 
         <!-- DASHBOARD -->
@@ -310,23 +330,24 @@
     </div>
 
     <script>
-        // CONFIGURAÇÕES SUPABASE
+        // --- 1. SETUP DE SEGURANÇA E CONEXÃO ---
         const SUPABASE_URL = 'https://nctjowqvtbejbipxhhd.supabase.co'; 
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5jdGpvd3F1YnRmYmVqaXB4aGhkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODk1NjYsImV4cCI6MjA4Mjk2NTU2Nn0.63GaaShzKx0oO6n4ci0Rj3onmenYycjcE0EN7vVvErE'; 
-
-        // Nome da variável alterado para evitar conflito com a lib global 'supabase'
+        
         let dbClient = null;
-        let dbMode = 'local';
+        let dbMode = 'local'; // 'cloud' ou 'local'
 
-        // Inicializa o cliente do Supabase
+        // Inicializa conexão sem travar a tela
         try {
-            dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-            console.log("Supabase Client Init OK");
+            if(window.supabase) {
+                dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                console.log("Supabase Client criado com sucesso.");
+            }
         } catch (e) {
-            console.error("Erro ao criar client Supabase", e);
+            console.warn("Aviso: Supabase não carregou. Usando modo Offline.", e);
         }
 
-        // VARIÁVEIS GLOBAIS
+        // --- 2. VARIÁVEIS GLOBAIS ---
         const MONTHS_ABBR = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
         let monthlyGoals = [0, 0, 30, 30, 30, 30, 30, 30, 30, 30, 55, 55];
         let participantsData = [];
@@ -335,14 +356,24 @@
         let tempAddPhotoBase64 = '';
         let tempEditPhotoBase64 = '';
 
-        // === AUTH E INIT ===
+        // --- 3. INICIALIZAÇÃO ---
         function handleLogin(e) {
             e.preventDefault();
-            const user = document.getElementById('loginUser').value;
-            const pass = document.getElementById('loginPass').value;
-            if (user === 'admin' && pass === 'Admin2026') { currentUserRole = 'admin'; enterSystem(); }
-            else if (user === 'Natal' && pass === '2026') { currentUserRole = 'user'; enterSystem(); }
-            else { document.getElementById('loginError').innerText = "Dados incorretos."; }
+            const user = document.getElementById('loginUser').value.trim();
+            const pass = document.getElementById('loginPass').value.trim();
+            
+            if (user === 'admin' && pass === 'Admin2026') { 
+                currentUserRole = 'admin'; 
+                enterSystem(); 
+            } else if (user === 'Natal' && pass === '2026') { 
+                currentUserRole = 'user'; 
+                enterSystem(); 
+            } else { 
+                const err = document.getElementById('loginError');
+                err.innerText = "Dados incorretos.";
+                err.classList.add('animate-pulse');
+                setTimeout(() => err.classList.remove('animate-pulse'), 500);
+            }
         }
 
         function enterSystem() {
@@ -350,125 +381,125 @@
             document.getElementById('mainNavbar').classList.remove('hidden');
             document.getElementById('mainContent').classList.remove('hidden');
             document.body.className = `flex flex-col min-h-screen role-${currentUserRole}`;
-            initSystem();
+            
+            // Inicia fluxo de dados
+            initDatePickers();
+            loadDataChain();
         }
 
         function handleLogout() { location.reload(); }
-        function initSystem() { initDatePickers(); loadData(); }
 
-        // === LÓGICA HÍBRIDA DE DADOS (NUVEM + LOCAL) ===
-        async function loadData() {
+        // --- 4. FLUXO DE DADOS BLINDADO ---
+        function addLog(msg) {
+            const logDiv = document.getElementById('debugLog');
+            if(logDiv) logDiv.innerHTML += `> ${msg}<br>`;
+            console.log(msg);
+        }
+
+        async function loadDataChain() {
             showLoading(true);
-            document.getElementById('loadingText').innerText = "Sincronizando...";
+            document.getElementById('loadingText').innerText = "Carregando dados...";
             
-            // Log para debug
-            console.log("Tentando conectar à nuvem...");
+            // 1. Carrega dados locais (Instantâneo)
+            loadFromLocal();
+            addLog("Dados locais carregados.");
 
-            // Promessa de busca na nuvem
-            const cloudPromise = new Promise(async (resolve, reject) => {
-                if (!dbClient) return reject("No client");
-                // Tenta buscar a linha com id 1
-                const { data, error } = await dbClient.from('natal_2026').select('conteudo').eq('id', 1).single();
+            // 2. Se tiver cliente de banco, tenta atualizar
+            if (dbClient) {
+                addLog("Tentando conectar nuvem...");
                 
-                if (error) {
-                    if(error.code !== 'PGRST116') {
-                        // Erro real de conexão
-                        console.error("Erro Supabase:", error);
-                        reject(error);
-                    } else {
-                        // Erro 404 (Tabela vazia), não é falha de conexão
-                        resolve(null); 
-                    }
-                } else {
+                // Timeout de 2.5s para não prender o usuário
+                const cloudPromise = new Promise(async (resolve, reject) => {
+                    const { data, error } = await dbClient.from('natal_2026').select('conteudo').eq('id', 1).single();
+                    if(error && error.code !== 'PGRST116') reject(error);
                     resolve(data);
-                }
-            });
+                });
 
-            // Timeout de 2.5s para não travar
-            const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject("timeout"), 2500));
+                const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject("timeout"), 2500));
 
-            try {
-                // Tenta conectar, se demorar, cai pro catch (modo offline)
-                const data = await Promise.race([cloudPromise, timeoutPromise]);
-                
-                if (data && data.conteudo) {
-                    console.log("Dados carregados da nuvem.");
-                    participantsData = data.conteudo.participants || [];
-                    monthlyGoals = data.conteudo.goals || monthlyGoals;
-                    fineConfig = data.conteudo.fine || fineConfig;
-                    dbMode = 'cloud';
-                    updateStatus('online');
-                } else {
-                    console.log("Nenhum dado na nuvem, usando local/demo.");
-                    loadFromLocal();
-                    dbMode = 'cloud'; // Ainda estamos conectados, só não tinha dados
+                try {
+                    const data = await Promise.race([cloudPromise, timeoutPromise]);
+                    if (data && data.conteudo) {
+                        participantsData = data.conteudo.participants || [];
+                        monthlyGoals = data.conteudo.goals || monthlyGoals;
+                        fineConfig = data.conteudo.fine || fineConfig;
+                        dbMode = 'cloud';
+                        addLog("Sucesso: Dados da nuvem sincronizados.");
+                        updateConnectionStatus('online');
+                    } else {
+                        addLog("Nuvem vazia ou nova. Usando local.");
+                        updateConnectionStatus('online');
+                    }
+                } catch (e) {
+                    addLog("Erro na nuvem: " + e);
+                    updateConnectionStatus('offline');
                 }
-            } catch (e) {
-                console.warn("Falha ou demora na nuvem, carregando dados locais:", e);
-                loadFromLocal();
-                dbMode = 'local';
-                updateStatus('offline');
+            } else {
+                addLog("Modo Offline (Sem cliente Supabase)");
+                updateConnectionStatus('offline');
             }
 
-            // Renderiza a tela
-            renderMonthlyGoalsInputs();
-            updateTotalAnnualGoalUI();
-            document.getElementById('fineThreshold').value = fineConfig.threshold;
-            document.getElementById('fineValue').value = fineConfig.value;
-            if(document.getElementById('fineDeadline')._flatpickr) {
-                 document.getElementById('fineDeadline')._flatpickr.setDate(fineConfig.deadline);
-            }
-            calculateTotalsAndRender();
-            showLoading(false);
+            // 3. Renderiza a tela
+            renderUI();
+            
+            // Fecha loading
+            setTimeout(() => showLoading(false), 500);
         }
 
         function loadFromLocal() {
-            const d = localStorage.getItem('natal2026_data');
-            if(d) participantsData = JSON.parse(d);
-            const g = localStorage.getItem('natal2026_goals');
-            if(g) monthlyGoals = JSON.parse(g);
+            try {
+                const d = localStorage.getItem('natal2026_data');
+                if(d) participantsData = JSON.parse(d);
+                const g = localStorage.getItem('natal2026_goals');
+                if(g) monthlyGoals = JSON.parse(g);
+                const f = localStorage.getItem('natal2026_fine');
+                if(f) fineConfig = JSON.parse(f);
+            } catch (e) {
+                console.error("Erro ao ler localstorage", e);
+            }
         }
 
         async function saveData() {
-            // Salva Localmente
+            // Salva Local
             localStorage.setItem('natal2026_data', JSON.stringify(participantsData));
             localStorage.setItem('natal2026_goals', JSON.stringify(monthlyGoals));
+            localStorage.setItem('natal2026_fine', JSON.stringify(fineConfig));
 
-            // Tenta Salvar na Nuvem (Background)
+            // Tenta Salvar Nuvem (Sem bloquear a tela)
             if (dbClient) {
                 const payload = { participants: participantsData, goals: monthlyGoals, fine: fineConfig };
-                console.log("Salvando na nuvem...");
                 dbClient.from('natal_2026').upsert({ id: 1, tipo: 'dados_gerais', conteudo: payload })
                     .then(({ error }) => {
-                        if (error) { 
-                            console.error("Erro ao salvar na nuvem:", error); 
-                            updateStatus('offline'); 
-                        } else { 
-                            console.log("Salvo na nuvem com sucesso."); 
-                            updateStatus('online'); 
-                        }
+                        if (error) updateConnectionStatus('offline');
+                        else updateConnectionStatus('online');
                     });
             }
         }
 
-        function updateStatus(status) {
+        function updateConnectionStatus(status) {
             const el = document.getElementById('connectionStatus');
-            if(el) {
-                el.innerHTML = status === 'online' 
-                    ? '<span class="status-dot online"></span> Online' 
-                    : '<span class="status-dot offline"></span> Offline';
+            if (el) {
+                const color = status === 'online' ? 'bg-emerald-500' : 'bg-amber-500';
+                const text = status === 'online' ? 'Online' : 'Offline';
+                el.innerHTML = `<span class="w-2 h-2 rounded-full ${color} inline-block mr-2"></span> ${text}`;
             }
         }
 
-        function resetData() {
-            if(confirm("ATENÇÃO: Apagar TODOS os dados?")) {
-                 participantsData = []; monthlyGoals = [0,0,0,0,0,0,0,0,0,0,0,0];
-                 calculateTotalsAndRender(); saveData();
+        // --- 5. RENDERIZAÇÃO E LÓGICA DE NEGÓCIO ---
+        function renderUI() {
+            renderMonthlyGoalsInputs();
+            updateTotalAnnualGoalUI();
+            
+            document.getElementById('fineThreshold').value = fineConfig.threshold;
+            document.getElementById('fineValue').value = fineConfig.value;
+            
+            if(document.getElementById('fineDeadline')._flatpickr) {
+                document.getElementById('fineDeadline')._flatpickr.setDate(fineConfig.deadline);
             }
-        }
-        function showLoading(show) { document.getElementById('loadingOverlay').classList.toggle('hidden', !show); }
 
-        // === CÁLCULOS E RENDERIZAÇÃO ===
+            calculateTotalsAndRender();
+        }
+
         function calculateTotalsAndRender() {
             const baseTotalGoal = monthlyGoals.reduce((a,b) => a+b, 0);
 
@@ -476,16 +507,21 @@
                 if (p.fine === undefined) p.fine = 0;
                 let personalGoal = baseTotalGoal;
                 let paidSum = 0;
+                
+                // Aniversário: Desconta meta desse mês
                 if (p.birthdayMonth !== null && p.birthdayMonth >= 0 && p.birthdayMonth < 12) {
-                    const discount = monthlyGoals[p.birthdayMonth];
-                    personalGoal -= discount;
+                    personalGoal -= monthlyGoals[p.birthdayMonth];
                 }
+                
                 p.months.forEach(val => paidSum += val);
-                p.totalPaid = paidSum + (p.extra || 0); 
-                p.totalGoal = personalGoal + (p.fine || 0); 
+                
+                p.totalPaid = paidSum + (p.extra || 0); // Extra soma no pago
+                p.totalGoal = personalGoal + (p.fine || 0); // Multa soma na meta (dívida)
+                
                 let missing = p.totalGoal - p.totalPaid;
                 p.missing = missing < 0 ? 0 : missing;
             });
+            
             updateDashboard();
         }
 
@@ -496,13 +532,15 @@
             const prog = tEsp > 0 ? (tArrec / tEsp) * 100 : 0;
             const ok = participantsData.filter(p => p.missing <= 0).length;
 
+            // Preenche Cards
             document.getElementById('dashboardSummary').innerHTML = `
                 <div class="card border-l-4 border-l-emerald-500"><p class="text-slate-400 text-[10px] font-bold uppercase">Caixa Atual</p><h2 class="text-2xl font-bold text-white mt-1">R$ ${tArrec.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</h2></div>
                 <div class="card border-l-4 border-l-rose-500"><p class="text-slate-400 text-[10px] font-bold uppercase">Falta Receber</p><h2 class="text-2xl font-bold text-white mt-1">R$ ${tFalta.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</h2></div>
                 <div class="card border-l-4 border-l-indigo-500"><p class="text-slate-400 text-[10px] font-bold uppercase">Participantes</p><div class="flex items-end gap-2 mt-1"><h2 class="text-2xl font-bold text-white">${participantsData.length}</h2><span class="text-xs text-indigo-400 font-bold mb-1 px-2 rounded bg-indigo-900/30">${ok} Quitados</span></div></div>
                 <div class="card border-l-4 border-l-amber-500"><p class="text-slate-400 text-[10px] font-bold uppercase">Extra Arrecadado</p><h2 class="text-2xl font-bold text-white mt-1">R$ ${participantsData.reduce((acc, p) => acc + (p.extra || 0), 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</h2></div>
             `;
-            // Charts
+            
+            // Preenche Gráficos
             document.getElementById('pieChartPercent').innerText = prog.toFixed(0) + '%';
             document.getElementById('pieChartPath').setAttribute('stroke-dasharray', `${prog}, 100`);
             document.getElementById('countOk').innerText = ok;
@@ -525,9 +563,18 @@
                 p.months.forEach((val, idx) => {
                     const goal = monthlyGoals[idx];
                     let badge = 'bg-none'; let content = '';
-                    if (p.birthdayMonth == idx) { badge = 'bg-birthday'; content = '🎂'; if(val>0) content+=` <span class="text-[9px]">${val}</span>`; }
-                    else if (goal > 0) { badge = val >= goal ? 'bg-paid' : val > 0 ? 'bg-partial' : 'bg-missed'; content = val > 0 ? val : '-'; }
-                    else { badge = val > 0 ? 'bg-paid' : 'bg-none'; content = val > 0 ? val : '-'; }
+                    
+                    if (p.birthdayMonth == idx) { 
+                        badge = 'bg-birthday'; content = '🎂'; 
+                        if(val>0) content+=` <span class="text-[9px]">${val}</span>`; 
+                    } else {
+                        if (goal > 0) { 
+                             if (val >= goal) badge = 'bg-paid'; else if (val > 0) badge = 'bg-partial'; else badge = 'bg-missed';
+                        } else {
+                             if (val > 0) badge = 'bg-paid'; else badge = 'bg-none';
+                        }
+                        content = val > 0 ? (Number.isInteger(val) ? val : val.toFixed(0)) : '-';
+                    }
                     monthsHTML += `<td class="p-1 text-center align-middle"><span class="status-badge ${badge}">${content}</span></td>`;
                 });
                 
@@ -544,7 +591,7 @@
             });
         }
 
-        // MODAL
+        // --- FUNÇÕES DE MODAL ---
         function openEditModal(index) {
             const p = participantsData[index]; if(!p) return;
             tempEditPhotoBase64 = '';
@@ -583,7 +630,7 @@
             calculateTotalsAndRender(); saveData(); closeEditModal();
         }
 
-        // ADMIN
+        // --- FUNÇÕES DE ADMIN ---
         function renderMonthlyGoalsInputs() {
             const c = document.getElementById('monthlyGoalsContainer'); c.innerHTML = '';
             monthlyGoals.forEach((val, idx) => c.innerHTML += `<div class="bg-slate-900 p-2 rounded border border-slate-700 flex flex-col"><label class="text-[10px] uppercase text-slate-500 font-bold mb-1">${MONTHS_ABBR[idx]}</label><div class="flex items-center"><span class="text-xs text-slate-500 mr-1">R$</span><input type="number" id="goal-${idx}" value="${val}" onchange="updateTotalAnnualGoalUI()" class="bg-transparent text-white text-sm w-full font-mono focus:outline-none"></div></div>`);
@@ -617,7 +664,7 @@
             calculateTotalsAndRender(); saveData(); document.getElementById('fineFeedback').innerText = `${c} aplicadas.`;
         }
 
-        // UTILS
+        // --- UTILITÁRIOS ---
         function switchTab(t) { if(t==='admin'&&currentUserRole!=='admin')return; document.getElementById('view-dashboard').classList.add('hidden'); document.getElementById('view-admin').classList.add('hidden'); document.getElementById('btn-dashboard').classList.remove('active'); document.getElementById('btn-admin').classList.remove('active'); document.getElementById('view-'+t).classList.remove('hidden'); document.getElementById('btn-'+t).classList.add('active'); if(t==='admin') renderAdminUserList(); }
         function initDatePickers() { flatpickr("#fineDeadline", { dateFormat: "d/m/Y", locale: "pt", defaultDate: fineConfig.deadline, theme: "dark", onChange: (d,s) => { fineConfig.deadline=s; saveData(); } }); }
         function readFileAsBase64(f) { return new Promise((res,rej)=>{const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(f);}); }
@@ -635,6 +682,12 @@
                  newData.push({ id: i, name: c[nIdx], months: mv, extra: parseFloat(c[eIdx])||0, fine: 0, totalPaid: 0, missing: 0, photo: '', birthdayMonth: null });
              }
              participantsData = newData; calculateTotalsAndRender(); saveData(); alert("Importado!");
+        }
+
+        // Função de show loading
+        function showLoading(show) {
+            const el = document.getElementById('loadingOverlay');
+            if(show) el.classList.remove('hidden'); else el.classList.add('hidden');
         }
     </script>
 </body>
