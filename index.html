@@ -90,32 +90,13 @@
         tr:hover td.sticky-col { background-color: #334155; }
         .profile-pic { object-fit: cover; width: 100%; height: 100%; }
 
-        /* Loading Overlay com Debug */
-        #loadingOverlay { 
-            background: rgba(15, 23, 42, 0.98); 
-            z-index: 200; 
-            position: fixed; 
-            inset: 0; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            color: white; 
-            flex-direction: column; 
-        }
-        #debugLog {
-            margin-top: 20px;
-            font-family: monospace;
-            font-size: 0.7rem;
-            color: #94a3b8;
-            max-width: 80%;
-            text-align: center;
-            background: rgba(0,0,0,0.3);
-            padding: 10px;
-            border-radius: 8px;
-            max-height: 100px;
-            overflow-y: auto;
-        }
+        #loadingOverlay { background: rgba(15, 23, 42, 0.98); z-index: 200; position: fixed; inset: 0; display: flex; justify-content: center; align-items: center; color: white; flex-direction: column; }
+        #debugLog { margin-top: 10px; font-family: monospace; font-size: 0.7rem; color: #64748b; }
         body.role-user .admin-only { display: none !important; }
+        
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+        .status-dot.online { background-color: #22c55e; box-shadow: 0 0 5px #22c55e; }
+        .status-dot.offline { background-color: #f59e0b; }
     </style>
 </head>
 <body class="flex flex-col min-h-screen">
@@ -123,10 +104,10 @@
     <!-- Loading -->
     <div id="loadingOverlay" class="hidden">
         <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-white mb-4"></div>
-        <p class="animate-pulse font-bold text-lg">Carregando...</p>
-        <p class="text-xs text-slate-400 mt-2" id="loadingText">Iniciando sistema...</p>
-        <!-- Log Visível para Debug -->
+        <p class="animate-pulse">Acedendo ao sistema...</p>
+        <p class="text-xs text-slate-400 mt-2" id="loadingText">Iniciando...</p>
         <div id="debugLog"></div>
+        <button onclick="forceOfflineMode()" class="mt-4 text-xs text-indigo-400 hover:text-white underline">Demorando? Usar modo offline</button>
     </div>
 
     <!-- LOGIN -->
@@ -330,24 +311,20 @@
     </div>
 
     <script>
-        // --- 1. SETUP DE SEGURANÇA E CONEXÃO ---
+        // CONFIGURAÇÕES SUPABASE
         const SUPABASE_URL = 'https://nctjowqvtbejbipxhhd.supabase.co'; 
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5jdGpvd3F1YnRmYmVqaXB4aGhkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODk1NjYsImV4cCI6MjA4Mjk2NTU2Nn0.63GaaShzKx0oO6n4ci0Rj3onmenYycjcE0EN7vVvErE'; 
         
+        // Inicialização Protegida
         let dbClient = null;
-        let dbMode = 'local'; // 'cloud' ou 'local'
-
-        // Inicializa conexão sem travar a tela
         try {
-            if(window.supabase) {
-                dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-                console.log("Supabase Client criado com sucesso.");
-            }
+            dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            console.log("Supabase Client criado");
         } catch (e) {
-            console.warn("Aviso: Supabase não carregou. Usando modo Offline.", e);
+            console.warn("Supabase não carregou. Usando modo Offline.");
         }
 
-        // --- 2. VARIÁVEIS GLOBAIS ---
+        // VARIÁVEIS GLOBAIS
         const MONTHS_ABBR = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
         let monthlyGoals = [0, 0, 30, 30, 30, 30, 30, 30, 30, 30, 55, 55];
         let participantsData = [];
@@ -356,24 +333,14 @@
         let tempAddPhotoBase64 = '';
         let tempEditPhotoBase64 = '';
 
-        // --- 3. INICIALIZAÇÃO ---
+        // === AUTH E INIT ===
         function handleLogin(e) {
             e.preventDefault();
-            const user = document.getElementById('loginUser').value.trim();
-            const pass = document.getElementById('loginPass').value.trim();
-            
-            if (user === 'admin' && pass === 'Admin2026') { 
-                currentUserRole = 'admin'; 
-                enterSystem(); 
-            } else if (user === 'Natal' && pass === '2026') { 
-                currentUserRole = 'user'; 
-                enterSystem(); 
-            } else { 
-                const err = document.getElementById('loginError');
-                err.innerText = "Dados incorretos.";
-                err.classList.add('animate-pulse');
-                setTimeout(() => err.classList.remove('animate-pulse'), 500);
-            }
+            const user = document.getElementById('loginUser').value;
+            const pass = document.getElementById('loginPass').value;
+            if (user === 'admin' && pass === 'Admin2026') { currentUserRole = 'admin'; enterSystem(); }
+            else if (user === 'Natal' && pass === '2026') { currentUserRole = 'user'; enterSystem(); }
+            else { document.getElementById('loginError').innerText = "Dados incorretos."; }
         }
 
         function enterSystem() {
@@ -381,41 +348,29 @@
             document.getElementById('mainNavbar').classList.remove('hidden');
             document.getElementById('mainContent').classList.remove('hidden');
             document.body.className = `flex flex-col min-h-screen role-${currentUserRole}`;
-            
-            // Inicia fluxo de dados
-            initDatePickers();
-            loadDataChain();
+            initSystem();
         }
 
         function handleLogout() { location.reload(); }
+        function initSystem() { initDatePickers(); loadDataChain(); }
 
-        // --- 4. FLUXO DE DADOS BLINDADO ---
-        function addLog(msg) {
-            const logDiv = document.getElementById('debugLog');
-            if(logDiv) logDiv.innerHTML += `> ${msg}<br>`;
-            console.log(msg);
-        }
-
+        // === LÓGICA HÍBRIDA ===
         async function loadDataChain() {
             showLoading(true);
-            document.getElementById('loadingText').innerText = "Carregando dados...";
+            const logDiv = document.getElementById('debugLog');
             
-            // 1. Carrega dados locais (Instantâneo)
+            // 1. Carrega local (fallback imediato)
             loadFromLocal();
-            addLog("Dados locais carregados.");
+            logDiv.innerHTML = "Tentando nuvem...";
 
-            // 2. Se tiver cliente de banco, tenta atualizar
+            // 2. Tenta nuvem (com timeout curto)
             if (dbClient) {
-                addLog("Tentando conectar nuvem...");
-                
-                // Timeout de 2.5s para não prender o usuário
                 const cloudPromise = new Promise(async (resolve, reject) => {
                     const { data, error } = await dbClient.from('natal_2026').select('conteudo').eq('id', 1).single();
                     if(error && error.code !== 'PGRST116') reject(error);
                     resolve(data);
                 });
-
-                const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject("timeout"), 2500));
+                const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject("timeout"), 2000)); // 2s
 
                 try {
                     const data = await Promise.race([cloudPromise, timeoutPromise]);
@@ -423,105 +378,92 @@
                         participantsData = data.conteudo.participants || [];
                         monthlyGoals = data.conteudo.goals || monthlyGoals;
                         fineConfig = data.conteudo.fine || fineConfig;
-                        dbMode = 'cloud';
-                        addLog("Sucesso: Dados da nuvem sincronizados.");
-                        updateConnectionStatus('online');
+                        logDiv.innerHTML = "Online";
+                        updateStatus('online');
                     } else {
-                        addLog("Nuvem vazia ou nova. Usando local.");
-                        updateConnectionStatus('online');
+                        logDiv.innerHTML = "Online (Vazio)";
+                        updateStatus('online');
                     }
                 } catch (e) {
-                    addLog("Erro na nuvem: " + e);
-                    updateConnectionStatus('offline');
+                    console.warn("Erro nuvem:", e);
+                    logDiv.innerHTML = "Offline (Erro rede/chave)";
+                    loadFromLocal(); // Garante reload local
+                    updateStatus('offline');
                 }
             } else {
-                addLog("Modo Offline (Sem cliente Supabase)");
-                updateConnectionStatus('offline');
+                logDiv.innerHTML = "Modo Offline";
+                updateStatus('offline');
             }
 
-            // 3. Renderiza a tela
             renderUI();
-            
-            // Fecha loading
             setTimeout(() => showLoading(false), 500);
         }
 
+        function forceOfflineMode() {
+            loadFromLocal();
+            renderUI();
+            showLoading(false);
+            updateStatus('offline');
+        }
+
         function loadFromLocal() {
-            try {
-                const d = localStorage.getItem('natal2026_data');
-                if(d) participantsData = JSON.parse(d);
-                const g = localStorage.getItem('natal2026_goals');
-                if(g) monthlyGoals = JSON.parse(g);
-                const f = localStorage.getItem('natal2026_fine');
-                if(f) fineConfig = JSON.parse(f);
-            } catch (e) {
-                console.error("Erro ao ler localstorage", e);
-            }
+            const d = localStorage.getItem('natal2026_data');
+            if(d) participantsData = JSON.parse(d);
+            const g = localStorage.getItem('natal2026_goals');
+            if(g) monthlyGoals = JSON.parse(g);
         }
 
         async function saveData() {
-            // Salva Local
             localStorage.setItem('natal2026_data', JSON.stringify(participantsData));
             localStorage.setItem('natal2026_goals', JSON.stringify(monthlyGoals));
             localStorage.setItem('natal2026_fine', JSON.stringify(fineConfig));
 
-            // Tenta Salvar Nuvem (Sem bloquear a tela)
             if (dbClient) {
                 const payload = { participants: participantsData, goals: monthlyGoals, fine: fineConfig };
                 dbClient.from('natal_2026').upsert({ id: 1, tipo: 'dados_gerais', conteudo: payload })
                     .then(({ error }) => {
-                        if (error) updateConnectionStatus('offline');
-                        else updateConnectionStatus('online');
+                        if(error) updateStatus('offline');
+                        else updateStatus('online');
                     });
             }
         }
 
-        function updateConnectionStatus(status) {
+        function updateStatus(status) {
             const el = document.getElementById('connectionStatus');
-            if (el) {
+            if(el) {
                 const color = status === 'online' ? 'bg-emerald-500' : 'bg-amber-500';
                 const text = status === 'online' ? 'Online' : 'Offline';
                 el.innerHTML = `<span class="w-2 h-2 rounded-full ${color} inline-block mr-2"></span> ${text}`;
             }
         }
 
-        // --- 5. RENDERIZAÇÃO E LÓGICA DE NEGÓCIO ---
+        // === UI RENDER ===
         function renderUI() {
             renderMonthlyGoalsInputs();
             updateTotalAnnualGoalUI();
-            
             document.getElementById('fineThreshold').value = fineConfig.threshold;
             document.getElementById('fineValue').value = fineConfig.value;
-            
             if(document.getElementById('fineDeadline')._flatpickr) {
                 document.getElementById('fineDeadline')._flatpickr.setDate(fineConfig.deadline);
             }
-
             calculateTotalsAndRender();
         }
 
         function calculateTotalsAndRender() {
             const baseTotalGoal = monthlyGoals.reduce((a,b) => a+b, 0);
-
             participantsData.forEach(p => {
                 if (p.fine === undefined) p.fine = 0;
                 let personalGoal = baseTotalGoal;
                 let paidSum = 0;
-                
-                // Aniversário: Desconta meta desse mês
                 if (p.birthdayMonth !== null && p.birthdayMonth >= 0 && p.birthdayMonth < 12) {
                     personalGoal -= monthlyGoals[p.birthdayMonth];
                 }
-                
                 p.months.forEach(val => paidSum += val);
-                
-                p.totalPaid = paidSum + (p.extra || 0); // Extra soma no pago
-                p.totalGoal = personalGoal + (p.fine || 0); // Multa soma na meta (dívida)
-                
+                p.totalPaid = paidSum + (p.extra || 0); 
+                p.totalGoal = personalGoal + (p.fine || 0); 
                 let missing = p.totalGoal - p.totalPaid;
                 p.missing = missing < 0 ? 0 : missing;
             });
-            
             updateDashboard();
         }
 
@@ -532,15 +474,13 @@
             const prog = tEsp > 0 ? (tArrec / tEsp) * 100 : 0;
             const ok = participantsData.filter(p => p.missing <= 0).length;
 
-            // Preenche Cards
             document.getElementById('dashboardSummary').innerHTML = `
                 <div class="card border-l-4 border-l-emerald-500"><p class="text-slate-400 text-[10px] font-bold uppercase">Caixa Atual</p><h2 class="text-2xl font-bold text-white mt-1">R$ ${tArrec.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</h2></div>
                 <div class="card border-l-4 border-l-rose-500"><p class="text-slate-400 text-[10px] font-bold uppercase">Falta Receber</p><h2 class="text-2xl font-bold text-white mt-1">R$ ${tFalta.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</h2></div>
                 <div class="card border-l-4 border-l-indigo-500"><p class="text-slate-400 text-[10px] font-bold uppercase">Participantes</p><div class="flex items-end gap-2 mt-1"><h2 class="text-2xl font-bold text-white">${participantsData.length}</h2><span class="text-xs text-indigo-400 font-bold mb-1 px-2 rounded bg-indigo-900/30">${ok} Quitados</span></div></div>
                 <div class="card border-l-4 border-l-amber-500"><p class="text-slate-400 text-[10px] font-bold uppercase">Extra Arrecadado</p><h2 class="text-2xl font-bold text-white mt-1">R$ ${participantsData.reduce((acc, p) => acc + (p.extra || 0), 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</h2></div>
             `;
-            
-            // Preenche Gráficos
+            // Charts
             document.getElementById('pieChartPercent').innerText = prog.toFixed(0) + '%';
             document.getElementById('pieChartPath').setAttribute('stroke-dasharray', `${prog}, 100`);
             document.getElementById('countOk').innerText = ok;
@@ -563,18 +503,9 @@
                 p.months.forEach((val, idx) => {
                     const goal = monthlyGoals[idx];
                     let badge = 'bg-none'; let content = '';
-                    
-                    if (p.birthdayMonth == idx) { 
-                        badge = 'bg-birthday'; content = '🎂'; 
-                        if(val>0) content+=` <span class="text-[9px]">${val}</span>`; 
-                    } else {
-                        if (goal > 0) { 
-                             if (val >= goal) badge = 'bg-paid'; else if (val > 0) badge = 'bg-partial'; else badge = 'bg-missed';
-                        } else {
-                             if (val > 0) badge = 'bg-paid'; else badge = 'bg-none';
-                        }
-                        content = val > 0 ? (Number.isInteger(val) ? val : val.toFixed(0)) : '-';
-                    }
+                    if (p.birthdayMonth == idx) { badge = 'bg-birthday'; content = '🎂'; if(val>0) content+=` <span class="text-[9px]">${val}</span>`; }
+                    else if (goal > 0) { badge = val >= goal ? 'bg-paid' : val > 0 ? 'bg-partial' : 'bg-missed'; content = val > 0 ? val : '-'; }
+                    else { badge = val > 0 ? 'bg-paid' : 'bg-none'; content = val > 0 ? val : '-'; }
                     monthsHTML += `<td class="p-1 text-center align-middle"><span class="status-badge ${badge}">${content}</span></td>`;
                 });
                 
@@ -591,7 +522,7 @@
             });
         }
 
-        // --- FUNÇÕES DE MODAL ---
+        // MODAL
         function openEditModal(index) {
             const p = participantsData[index]; if(!p) return;
             tempEditPhotoBase64 = '';
@@ -630,7 +561,7 @@
             calculateTotalsAndRender(); saveData(); closeEditModal();
         }
 
-        // --- FUNÇÕES DE ADMIN ---
+        // ADMIN
         function renderMonthlyGoalsInputs() {
             const c = document.getElementById('monthlyGoalsContainer'); c.innerHTML = '';
             monthlyGoals.forEach((val, idx) => c.innerHTML += `<div class="bg-slate-900 p-2 rounded border border-slate-700 flex flex-col"><label class="text-[10px] uppercase text-slate-500 font-bold mb-1">${MONTHS_ABBR[idx]}</label><div class="flex items-center"><span class="text-xs text-slate-500 mr-1">R$</span><input type="number" id="goal-${idx}" value="${val}" onchange="updateTotalAnnualGoalUI()" class="bg-transparent text-white text-sm w-full font-mono focus:outline-none"></div></div>`);
@@ -664,7 +595,7 @@
             calculateTotalsAndRender(); saveData(); document.getElementById('fineFeedback').innerText = `${c} aplicadas.`;
         }
 
-        // --- UTILITÁRIOS ---
+        // UTILS
         function switchTab(t) { if(t==='admin'&&currentUserRole!=='admin')return; document.getElementById('view-dashboard').classList.add('hidden'); document.getElementById('view-admin').classList.add('hidden'); document.getElementById('btn-dashboard').classList.remove('active'); document.getElementById('btn-admin').classList.remove('active'); document.getElementById('view-'+t).classList.remove('hidden'); document.getElementById('btn-'+t).classList.add('active'); if(t==='admin') renderAdminUserList(); }
         function initDatePickers() { flatpickr("#fineDeadline", { dateFormat: "d/m/Y", locale: "pt", defaultDate: fineConfig.deadline, theme: "dark", onChange: (d,s) => { fineConfig.deadline=s; saveData(); } }); }
         function readFileAsBase64(f) { return new Promise((res,rej)=>{const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(f);}); }
