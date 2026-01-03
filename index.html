@@ -126,7 +126,108 @@
             width: 100%;
             height: 100%;
         }
-    </style>
+    
+        /* ===========================
+           RESPONSIVIDADE (MOBILE)
+           - No mobile, esconder colunas de meses (Jan..Dez)
+           - Opcional: esconder coluna Editar no mobile
+           =========================== */
+        @media (max-width: 640px) {
+            .month-col { display: none !important; }
+            .extra-col { display: none !important; }
+            #editColHead, td.edit-col { display: none !important; }
+            th.sticky-col, td.sticky-col { min-width: 170px; }
+        
+
+            /* Tight layout para caber tudo na tela */
+            .px-6 { padding-left: 0.75rem !important; padding-right: 0.75rem !important; }
+            .mt-6 { margin-top: 0.75rem !important; }
+            .gap-6 { gap: 0.75rem !important; }
+            .pb-14 { padding-bottom: 2rem !important; }
+
+            .card { padding: 0.9rem !important; border-radius: 0.9rem !important; }
+            .card h2.text-2xl { font-size: 1.25rem !important; }
+
+            #searchInput { width: 140px !important; }
+
+            /* Tabela compacta (sem scroll lateral) */
+            .table-compact { table-layout: fixed !important; }
+            .table-compact th, .table-compact td { padding: 0.45rem 0.35rem !important; line-height: 1.15 !important; }
+            .table-compact th { font-size: 0.60rem !important; }
+            .table-compact td { font-size: 0.78rem !important; }
+
+            th.sticky-col, td.sticky-col { min-width: 145px !important; }
+            th.sticky-col { padding-left: 0.65rem !important; }
+
+            .col-multa { width: 56px !important; min-width: 56px !important; }
+            .col-total { width: 78px !important; min-width: 78px !important; }
+            .col-falta { width: 78px !important; min-width: 78px !important; }
+
+            .avatar { width: 1.75rem !important; height: 1.75rem !important; }
+}
+
+        /* Cards mais minimalistas e arredondados */
+        .mini-pill { border-radius: 9999px !important; }
+        @media (max-width: 640px) {
+            .mini-pill { padding: 10px 12px !important; }
+        }
+
+/* ====== Santa runner (progresso) ====== */
+.santa-track { position: relative; }
+.santa-runner {
+  position: absolute;
+  top: 50%;
+  left: 0%;
+  transform: translate(-50%, -65%);
+  width: 42px;
+  height: 42px;
+  pointer-events: none;
+  transition: left 1000ms ease;
+  filter: drop-shadow(0 6px 10px rgba(0,0,0,.35));
+  animation: santaBob 900ms ease-in-out infinite;
+}
+.santa-destination {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-55%);
+  width: 34px;
+  height: 34px;
+  pointer-events: none;
+  opacity: .9;
+  filter: drop-shadow(0 6px 10px rgba(0,0,0,.25));
+}
+@keyframes santaBob {
+  0%,100% { transform: translate(-50%, -65%) translateY(0); }
+  50% { transform: translate(-50%, -65%) translateY(-2px); }
+}
+
+/* ====== Gift fill (status de quitação) ====== */
+.gift-wrap { width: 190px; height: 190px; }
+.gift-svg { width: 100%; height: 100%; }
+
+.gift-wave-1 { animation: waveMove 3.5s linear infinite; opacity: .95; }
+.gift-wave-2 { animation: waveMove 5.5s linear infinite reverse; opacity: .55; }
+
+@keyframes waveMove {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-48px); }
+}
+
+/* SVG transform compatibility */
+.gift-wave-1, .gift-wave-2 {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* Mobile: reduz */
+@media (max-width: 640px) {
+  .santa-runner { width: 34px; height: 34px; transform: translate(-50%, -70%); }
+  .santa-destination { width: 28px; height: 28px; }
+  .gift-wrap { width: 160px; height: 160px; }
+}
+
+</style>
 </head>
 <body class="flex flex-col min-h-screen">
     <!-- Login Overlay (controle simples: NÃO é segurança real) -->
@@ -244,28 +345,28 @@
                 </div>
                 
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
+                    <table class="w-full text-left border-collapse table-compact">
                         <thead>
                             <tr class="bg-slate-900 text-slate-400 text-[10px] uppercase font-bold border-b border-slate-700">
-                                <th class="p-3 sticky-col min-w-[200px] text-slate-300 pl-4">Participante</th>
-                                <th class="p-2 text-center w-14">Jan</th>
-                                <th class="p-2 text-center w-14">Fev</th>
-                                <th class="p-2 text-center w-14">Mar</th>
-                                <th class="p-2 text-center w-14">Abr</th>
-                                <th class="p-2 text-center w-14">Mai</th>
-                                <th class="p-2 text-center w-14">Jun</th>
-                                <th class="p-2 text-center w-14">Jul</th>
-                                <th class="p-2 text-center w-14">Ago</th>
-                                <th class="p-2 text-center w-14">Set</th>
-                                <th class="p-2 text-center w-14">Out</th>
-                                <th class="p-2 text-center w-14">Nov</th>
-                                <th class="p-2 text-center w-14">Dez</th>
+                                <th class="p-3 sticky-col min-w-[170px] text-slate-300 pl-4">Participante</th>
+                                <th class="p-2 text-center w-14 month-col">Jan</th>
+                                <th class="p-2 text-center w-14 month-col">Fev</th>
+                                <th class="p-2 text-center w-14 month-col">Mar</th>
+                                <th class="p-2 text-center w-14 month-col">Abr</th>
+                                <th class="p-2 text-center w-14 month-col">Mai</th>
+                                <th class="p-2 text-center w-14 month-col">Jun</th>
+                                <th class="p-2 text-center w-14 month-col">Jul</th>
+                                <th class="p-2 text-center w-14 month-col">Ago</th>
+                                <th class="p-2 text-center w-14 month-col">Set</th>
+                                <th class="p-2 text-center w-14 month-col">Out</th>
+                                <th class="p-2 text-center w-14 month-col">Nov</th>
+                                <th class="p-2 text-center w-14 month-col">Dez</th>
                                 <!-- Coluna Multa (Dívida) -->
-                                <th class="p-2 text-center bg-rose-900/10 border-l border-rose-900/20 text-rose-400 min-w-[60px]" title="Dívida de Multa">Multa</th>
+                                <th class="p-2 text-center bg-rose-900/10 border-l border-rose-900/20 text-rose-400 min-w-[60px] col-multa" title="Dívida de Multa">Multa</th>
                                 <!-- Coluna Extra (Pagamento) -->
-                                <th class="p-2 text-center bg-indigo-900/10 border-l border-indigo-900/20 text-indigo-400 min-w-[60px]" title="Valor Extra Pago">Extra</th>
-                                <th class="p-2 text-right bg-slate-800/50 min-w-[90px]">Total Pago</th>
-                                <th class="p-2 text-right bg-slate-800/50 border-r border-slate-700 min-w-[90px]">Falta</th>
+                                <th class="p-2 text-center bg-indigo-900/10 border-l border-indigo-900/20 text-indigo-400 min-w-[60px] extra-col extra-col" title="Valor Extra Pago">Extra</th>
+                                <th class="p-2 text-right bg-slate-800/50 min-w-[90px] col-total col-total">Total Pago</th>
+                                <th class="p-2 text-right bg-slate-800/50 border-r border-slate-700 min-w-[90px] col-falta col-falta">Falta</th>
                                 <th id="editColHead" class="p-2 text-center sticky right-0 bg-slate-900 z-10 w-16 shadow-[-5px_0_10px_rgba(0,0,0,0.2)]">Editar</th>
                             </tr>
                         </thead>
@@ -283,22 +384,70 @@
                     <h3 class="text-sm font-bold text-slate-400 w-full mb-4 flex items-center gap-2 border-b border-slate-700 pb-2">
                         <i class="ph ph-chart-donut text-indigo-400"></i> Status de Quitação
                     </h3>
-                    <div class="relative w-48 h-48 my-4">
-                        <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-                            <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#334155" stroke-width="2" />
-                            <path id="pieChartPath" d="" fill="none" stroke="#6366f1" stroke-width="2" stroke-dasharray="0, 100" class="transition-all duration-1000" />
-                        </svg>
-                        <div class="absolute inset-0 flex flex-col items-center justify-center">
-                            <span id="pieChartPercent" class="text-3xl font-bold text-white">0%</span>
-                            <span class="text-xs text-slate-500 uppercase tracking-widest font-bold">Pago</span>
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4 w-full mt-2">
-                        <div class="bg-slate-900 p-2 rounded text-center border border-slate-700">
+                    <div class="gift-wrap relative my-4">
+    <svg class="gift-svg" viewBox="0 0 160 160">
+        <defs>
+            <linearGradient id="giftFillGrad" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0%" stop-color="rgba(16,185,129,.95)"/>
+                <stop offset="100%" stop-color="rgba(20,184,166,.85)"/>
+            </linearGradient>
+
+            <clipPath id="giftClip">
+                <rect x="46" y="74" width="68" height="58" rx="10"></rect>
+            </clipPath>
+        </defs>
+
+        <!-- FILL (clipped) -->
+        <g clip-path="url(#giftClip)">
+            <g id="giftFillLevel" transform="translate(0,58)">
+                <rect x="46" y="74" width="68" height="90" fill="url(#giftFillGrad)"></rect>
+
+                <g>
+                    <path class="gift-wave-1" fill="rgba(255,255,255,.22)"
+                          d="M30 92
+                             C 44 84, 58 100, 72 92
+                             C 86 84, 100 100, 114 92
+                             C 128 84, 142 100, 156 92
+                             L 156 160 L 30 160 Z"/>
+                    <path class="gift-wave-2" fill="rgba(255,255,255,.16)"
+                          d="M30 98
+                             C 46 90, 62 106, 78 98
+                             C 94 90, 110 106, 126 98
+                             C 142 90, 158 106, 174 98
+                             L 174 160 L 30 160 Z"/>
+                </g>
+            </g>
+        </g>
+
+        <!-- OUTLINE -->
+        <rect x="40" y="68" width="80" height="72" rx="14"
+              fill="rgba(30,41,59,.55)" stroke="rgba(148,163,184,.25)" stroke-width="2"/>
+        <rect x="36" y="52" width="88" height="22" rx="12"
+              fill="rgba(30,41,59,.65)" stroke="rgba(148,163,184,.25)" stroke-width="2"/>
+
+        <rect x="76" y="52" width="8" height="88" rx="4" fill="rgba(99,102,241,.85)"/>
+        <rect x="36" y="60" width="88" height="8" rx="4" fill="rgba(99,102,241,.85)"/>
+
+        <path d="M80 52
+                 C 68 40, 52 44, 56 58
+                 C 60 70, 74 66, 80 58
+                 C 86 66, 100 70, 104 58
+                 C 108 44, 92 40, 80 52 Z"
+              fill="rgba(99,102,241,.95)"/>
+    </svg>
+
+    <div class="absolute inset-0 flex flex-col items-center justify-center">
+        <span id="pieChartPercent" class="text-3xl font-bold text-white">0%</span>
+        <span class="text-xs text-slate-500 uppercase tracking-widest font-bold">Pago</span>
+    </div>
+</div>
+
+<div class="grid grid-cols-2 gap-4 w-full mt-2">
+                        <div class="bg-slate-900 p-2 rounded text-center border border-slate-700" mini-pill">
                             <span id="countOk" class="block text-lg font-bold text-emerald-400">0</span>
                             <span class="text-[10px] uppercase text-slate-500 font-bold">Em dia</span>
                         </div>
-                        <div class="bg-slate-900 p-2 rounded text-center border border-slate-700">
+                        <div class="bg-slate-900 p-2 rounded text-center border border-slate-700" mini-pill">
                             <span id="countPending" class="block text-lg font-bold text-rose-400">0</span>
                             <span class="text-[10px] uppercase text-slate-500 font-bold">Pendente</span>
                         </div>
@@ -315,22 +464,51 @@
                             <span>Progresso Atual</span>
                             <span id="metaLabel" class="font-mono text-slate-400">Meta: R$ 0</span>
                         </div>
-                        <div class="w-full bg-slate-900 rounded-full h-8 border border-slate-700 relative overflow-hidden">
-                            <div id="mainProgressBar" class="bg-gradient-to-r from-emerald-600 to-teal-500 h-full flex items-center justify-end pr-3 text-xs font-bold text-white shadow-[0_0_10px_rgba(16,185,129,0.3)] transition-all duration-1000" style="width: 0%">
-                                0%
-                            </div>
-                        </div>
+                        <div id="progressTrack" class="w-full bg-slate-900 rounded-full h-8 border border-slate-700 relative overflow-hidden santa-track">
+    <div id="mainProgressBar" class="bg-gradient-to-r from-emerald-600 to-teal-500 h-full rounded-full text-right pr-3 flex items-center justify-end text-xs font-bold text-white shadow-[0_0_10px_rgba(16,185,129,0.3)] transition-all duration-1000" style="width: 0%">
+        0%
+    </div>
+
+    <!-- Destino (árvore) -->
+    <div class="santa-destination" aria-hidden="true">
+        <svg viewBox="0 0 64 64" class="w-full h-full">
+            <path d="M32 6 L14 34 H24 L10 54 H54 L40 34 H50 Z" fill="rgba(16,185,129,.85)"/>
+            <rect x="28" y="48" width="8" height="10" rx="2" fill="rgba(148,163,184,.75)"/>
+            <circle cx="44" cy="18" r="3" fill="rgba(250,204,21,.9)"/>
+        </svg>
+    </div>
+
+    <!-- Noel correndo -->
+    <div id="santaRunner" class="santa-runner" aria-hidden="true">
+        <svg viewBox="0 0 64 64" class="w-full h-full">
+            <path d="M22 18c7-10 20-10 28 0l-4 6H26z" fill="white" opacity=".9"/>
+            <path d="M24 18c6-8 16-8 22 0l-3 5H27z" fill="#ef4444"/>
+            <circle cx="48" cy="21" r="4" fill="white"/>
+
+            <circle cx="32" cy="30" r="10" fill="#fde68a"/>
+            <path d="M24 34c4 7 12 7 16 0" fill="none" stroke="white" stroke-width="5" stroke-linecap="round"/>
+            <circle cx="28" cy="29" r="1.5" fill="#0f172a"/>
+            <circle cx="36" cy="29" r="1.5" fill="#0f172a"/>
+
+            <path d="M18 46c6-10 22-10 28 0v8H18z" fill="#ef4444"/>
+            <rect x="28" y="44" width="10" height="6" rx="2" fill="#0f172a" opacity=".85"/>
+
+            <path d="M24 54l-8 6" stroke="#0f172a" stroke-width="5" stroke-linecap="round"/>
+            <path d="M40 54l10 4" stroke="#0f172a" stroke-width="5" stroke-linecap="round"/>
+        </svg>
+    </div>
+</div>
                     </div>
                     <div class="grid grid-cols-3 gap-4 mt-8">
-                        <div class="bg-slate-900 p-4 rounded-lg border border-slate-700 text-center">
+                        <div class="bg-slate-900 p-4 rounded-lg border border-slate-700 text-center" mini-pill">
                             <p class="text-[10px] text-slate-500 font-bold uppercase mb-1">Esperado Total</p>
                             <p id="summaryTotalExpected" class="text-lg font-bold text-white">R$ 0</p>
                         </div>
-                        <div class="bg-slate-900 p-4 rounded-lg border border-slate-700 text-center">
+                        <div class="bg-slate-900 p-4 rounded-lg border border-slate-700 text-center" mini-pill">
                             <p class="text-[10px] text-slate-500 font-bold uppercase mb-1">Confirmado</p>
                             <p id="summaryTotalPaid" class="text-lg font-bold text-emerald-400">R$ 0</p>
                         </div>
-                        <div class="bg-slate-900 p-4 rounded-lg border border-slate-700 text-center">
+                        <div class="bg-slate-900 p-4 rounded-lg border border-slate-700 text-center" mini-pill">
                             <p class="text-[10px] text-slate-500 font-bold uppercase mb-1">Em Aberto</p>
                             <p id="summaryTotalMissing" class="text-lg font-bold text-rose-400">R$ 0</p>
                         </div>
@@ -934,10 +1112,12 @@ const views = { dashboard: document.getElementById('view-dashboard'), admin: doc
             `;
 
             document.getElementById('pieChartPercent').innerText = progress.toFixed(0) + '%';
-            document.getElementById('pieChartPath').setAttribute('stroke-dasharray', `${progress}, 100`);
-            document.getElementById('countOk').innerText = peopleOk;
+            updateGiftProgress(progress);
+            updateSantaRunner(progress);
+document.getElementById('countOk').innerText = peopleOk;
             document.getElementById('countPending').innerText = participantsData.length - peopleOk;
             document.getElementById('mainProgressBar').style.width = `${progress}%`;
+            document.getElementById('mainProgressBar').innerText = `${progress.toFixed(0)}%`;
             document.getElementById('metaLabel').innerText = `Meta: R$ ${totalEsperado.toLocaleString('pt-BR')}`;
             document.getElementById('summaryTotalExpected').innerText = `R$ ${totalEsperado.toLocaleString('pt-BR')}`;
             document.getElementById('summaryTotalPaid').innerText = `R$ ${totalArrecadado.toLocaleString('pt-BR')}`;
@@ -955,7 +1135,7 @@ const views = { dashboard: document.getElementById('view-dashboard'), admin: doc
                 const realIndex = participantsData.findIndex(pp => pp.id === p.id);
                 const clickAttr = isAdmin ? `onclick="openEditModal(${realIndex})"` : '';
                 const editTd = isAdmin ? `
-                    <td class="p-2 text-center align-middle sticky right-0 bg-slate-800 z-10 border-l border-slate-700 shadow-[-5px_0_10px_rgba(0,0,0,0.2)]">
+                    <td class="p-2 text-center align-middle sticky right-0 bg-slate-800 z-10 border-l border-slate-700 edit-col shadow-[-5px_0_10px_rgba(0,0,0,0.2)]">
                         <button onclick="openEditModal(${realIndex})" class="text-indigo-400 hover:text-white p-1.5 rounded hover:bg-indigo-600 transition shadow-sm"><i class="ph ph-pencil-simple text-lg"></i></button>
                     </td>
                 ` : '';
@@ -982,7 +1162,7 @@ const views = { dashboard: document.getElementById('view-dashboard'), admin: doc
                         content = val > 0 ? (Number.isInteger(val) ? val : val.toFixed(0)) : '-';
                     }
                     
-                    monthsHTML += `<td class="p-2 text-center align-middle"><span class="status-badge ${badgeClass}">${content}</span></td>`;
+                    monthsHTML += `<td class="p-2 text-center align-middle month-col"><span class="status-badge ${badgeClass}">${content}</span></td>`;
                 });
 
                 const row = document.createElement('tr');
@@ -990,7 +1170,7 @@ const views = { dashboard: document.getElementById('view-dashboard'), admin: doc
                 
                 let avatarHTML;
                 if (p.photo && p.photo.trim() !== "") {
-                    avatarHTML = `<div class="w-8 h-8 rounded-full overflow-hidden border-2 border-slate-600 flex-shrink-0 bg-slate-800"><img src="${p.photo}" class="profile-pic" onerror="this.style.display='none';this.parentElement.innerHTML='<div class=\\'w-full h-full flex items-center justify-center text-xs font-bold text-slate-400\\'>?</div>'"></div>`;
+                    avatarHTML = `<div class="avatar w-8 h-8 rounded-full overflow-hidden border-2 border-slate-600 flex-shrink-0 bg-slate-800"><img src="${p.photo}" class="profile-pic" onerror="this.style.display='none';this.parentElement.innerHTML='<div class=\\'w-full h-full flex items-center justify-center text-xs font-bold text-slate-400\\'>?</div>'"></div>`;
                 } else {
                     avatarHTML = `<div class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-[10px] text-slate-300 border border-slate-600 font-bold shadow-sm flex-shrink-0">${p.name.charAt(0)}</div>`;
                 }
@@ -1010,10 +1190,10 @@ const views = { dashboard: document.getElementById('view-dashboard'), admin: doc
                     </td>
                     ${monthsHTML}
                     <!-- Colunas trocadas para alinhar com o cabeçalho -->
-                    <td class="p-2 text-center align-middle bg-rose-900/10 border-l border-rose-900/20 text-xs">${fineDisplay}</td>
-                    <td class="p-2 text-center align-middle bg-indigo-900/10 border-l border-indigo-900/20 text-xs">${extraDisplay}</td>
-                    <td class="p-2 text-right align-middle bg-slate-800/50 font-mono font-medium text-emerald-400 text-xs">R$ ${(p.totalPaid).toFixed(0)}</td>
-                    <td class="p-2 text-right align-middle bg-slate-800/50 border-r border-slate-700 font-mono font-medium ${p.missing > 0 ? 'text-rose-400' : 'text-slate-600'} text-xs">R$ ${p.missing.toFixed(0)}</td>
+                    <td class="p-2 text-center align-middle bg-rose-900/10 border-l border-rose-900/20 text-xs col-multa">${fineDisplay}</td>
+                    <td class="p-2 text-center align-middle bg-indigo-900/10 border-l border-indigo-900/20 text-xs extra-col">${extraDisplay}</td>
+                    <td class="p-2 text-right align-middle bg-slate-800/50 font-mono font-medium text-emerald-400 text-xs col-total">R$ ${(p.totalPaid).toFixed(0)}</td>
+                    <td class="p-2 text-right align-middle bg-slate-800/50 border-r border-slate-700 font-mono font-medium ${p.missing > 0 ? 'text-rose-400' : 'text-slate-600'} text-xs col-falta">R$ ${p.missing.toFixed(0)}</td>
                     ${editTd}
                 `;
                 tbody.appendChild(row);
