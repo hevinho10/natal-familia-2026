@@ -92,12 +92,6 @@
 
         #loadingOverlay { background: rgba(15, 23, 42, 0.95); z-index: 200; position: fixed; inset: 0; display: flex; justify-content: center; align-items: center; color: white; flex-direction: column; }
         body.role-user .admin-only { display: none !important; }
-        
-        .status-dot {
-            width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px;
-        }
-        .status-dot.online { background-color: #22c55e; box-shadow: 0 0 5px #22c55e; }
-        .status-dot.offline { background-color: #f59e0b; }
     </style>
 </head>
 <body class="flex flex-col min-h-screen">
@@ -105,8 +99,8 @@
     <!-- Loading -->
     <div id="loadingOverlay" class="hidden">
         <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-white mb-4"></div>
-        <p class="animate-pulse">Acedendo ao sistema...</p>
-        <p class="text-xs text-slate-500 mt-2" id="loadingText">Sincronizando com a Nuvem...</p>
+        <p class="animate-pulse">Conectando ao banco de dados...</p>
+        <p class="text-xs text-slate-400 mt-2" id="loadingText">Aguarde...</p>
     </div>
 
     <!-- LOGIN -->
@@ -159,11 +153,6 @@
     <!-- Conteúdo -->
     <main id="mainContent" class="hidden flex-grow p-4 sm:p-6 w-full max-w-7xl mx-auto space-y-6">
         
-        <!-- Status Bar -->
-        <div class="text-right text-xs text-slate-500">
-            <span id="connectionStatus"><span class="status-dot"></span> Conectando...</span>
-        </div>
-
         <!-- DASHBOARD -->
         <div id="view-dashboard" class="fade-in space-y-6">
             <div class="flex flex-col sm:flex-row justify-between items-end sm:items-center gap-4">
@@ -310,23 +299,20 @@
     </div>
 
     <script>
-        // CONFIGURAÇÕES SUPABASE CORRETAS
+        // CONFIGURAÇÕES SUPABASE
         const SUPABASE_URL = 'https://nctjowqvtbejbipxhhd.supabase.co'; 
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5jdGpvd3F1YnRmYmVqaXB4aGhkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODk1NjYsImV4cCI6MjA4Mjk2NTU2Nn0.63GaaShzKx0oO6n4ci0Rj3onmenYycjcE0EN7vVvErE'; 
-        
-        let dbClient = null;
-        let dbMode = 'local'; 
 
-        function initSupabase() {
-            try {
-                // Renomeado para dbClient para evitar conflito
-                dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-                console.log("Supabase Client Init OK");
-            } catch (e) {
-                console.error("Erro ao criar client Supabase", e);
-            }
+        // Nome da variável alterado para evitar conflito com a lib global 'supabase'
+        let dbClient = null;
+
+        // Inicializa o cliente do Supabase
+        try {
+            dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            console.log("Supabase Client Init OK");
+        } catch (e) {
+            console.error("Erro ao criar client Supabase", e);
         }
-        initSupabase();
 
         // VARIÁVEIS GLOBAIS
         const MONTHS_ABBR = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
@@ -358,45 +344,48 @@
         function handleLogout() { location.reload(); }
         function initSystem() { initDatePickers(); loadData(); }
 
-        // === LÓGICA HÍBRIDA DE DADOS ===
+        // === LÓGICA HÍBRIDA DE DADOS (NUVEM + LOCAL) ===
         async function loadData() {
             showLoading(true);
             document.getElementById('loadingText').innerText = "Sincronizando...";
 
+            // Promessa de busca na nuvem
             const cloudPromise = new Promise(async (resolve, reject) => {
-                if(!dbClient) return reject("No client");
+                if (!dbClient) return reject("No client");
+                // Tenta buscar a linha com id 1
                 const { data, error } = await dbClient.from('natal_2026').select('conteudo').eq('id', 1).single();
-                if(error && error.code !== 'PGRST116') reject(error);
+                if (error && error.code !== 'PGRST116') reject(error); // Erro real (não é 404)
                 resolve(data);
             });
 
+            // Timeout de 2.5s para não travar
             const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject("timeout"), 2500));
 
             try {
+                // Tenta conectar, se demorar, cai pro catch (modo offline)
                 const data = await Promise.race([cloudPromise, timeoutPromise]);
+                
                 if (data && data.conteudo) {
+                    console.log("Dados carregados da nuvem.");
                     participantsData = data.conteudo.participants || [];
                     monthlyGoals = data.conteudo.goals || monthlyGoals;
                     fineConfig = data.conteudo.fine || fineConfig;
-                    dbMode = 'cloud';
-                    updateStatus('online');
                 } else {
+                    console.log("Nenhum dado na nuvem, usando local/demo.");
                     loadFromLocal();
-                    dbMode = 'cloud';
                 }
             } catch (e) {
-                console.warn("Falha na nuvem, usando modo offline:", e);
+                console.warn("Falha ou demora na nuvem, carregando dados locais:", e);
                 loadFromLocal();
-                dbMode = 'local';
-                updateStatus('offline');
             }
 
+            // Renderiza a tela
             renderMonthlyGoalsInputs();
             updateTotalAnnualGoalUI();
             document.getElementById('fineThreshold').value = fineConfig.threshold;
             document.getElementById('fineValue').value = fineConfig.value;
             if(document.getElementById('fineDeadline')._flatpickr) {
-                    document.getElementById('fineDeadline')._flatpickr.setDate(fineConfig.deadline);
+                 document.getElementById('fineDeadline')._flatpickr.setDate(fineConfig.deadline);
             }
             calculateTotalsAndRender();
             showLoading(false);
@@ -410,25 +399,18 @@
         }
 
         async function saveData() {
+            // Salva Localmente
             localStorage.setItem('natal2026_data', JSON.stringify(participantsData));
             localStorage.setItem('natal2026_goals', JSON.stringify(monthlyGoals));
 
-            if(dbClient) {
+            // Tenta Salvar na Nuvem (Background)
+            if (dbClient) {
                 const payload = { participants: participantsData, goals: monthlyGoals, fine: fineConfig };
                 dbClient.from('natal_2026').upsert({ id: 1, tipo: 'dados_gerais', conteudo: payload })
                     .then(({ error }) => {
-                        if(error) { console.error("Erro nuvem", error); updateStatus('offline'); }
-                        else { updateStatus('online'); }
+                        if (error) console.error("Erro ao salvar na nuvem:", error);
+                        else console.log("Salvo na nuvem com sucesso.");
                     });
-            }
-        }
-
-        function updateStatus(status) {
-            const el = document.getElementById('connectionStatus');
-            if(el) {
-                el.innerHTML = status === 'online' 
-                    ? '<span class="status-dot online"></span> Online (Nuvem)' 
-                    : '<span class="status-dot offline"></span> Offline (Local)';
             }
         }
 
@@ -474,7 +456,7 @@
                 <div class="card border-l-4 border-l-indigo-500"><p class="text-slate-400 text-[10px] font-bold uppercase">Participantes</p><div class="flex items-end gap-2 mt-1"><h2 class="text-2xl font-bold text-white">${participantsData.length}</h2><span class="text-xs text-indigo-400 font-bold mb-1 px-2 rounded bg-indigo-900/30">${ok} Quitados</span></div></div>
                 <div class="card border-l-4 border-l-amber-500"><p class="text-slate-400 text-[10px] font-bold uppercase">Extra Arrecadado</p><h2 class="text-2xl font-bold text-white mt-1">R$ ${participantsData.reduce((acc, p) => acc + (p.extra || 0), 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</h2></div>
             `;
-            
+            // Charts
             document.getElementById('pieChartPercent').innerText = prog.toFixed(0) + '%';
             document.getElementById('pieChartPath').setAttribute('stroke-dasharray', `${prog}, 100`);
             document.getElementById('countOk').innerText = ok;
