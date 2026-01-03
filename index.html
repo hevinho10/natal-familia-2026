@@ -299,11 +299,11 @@
     </div>
 
     <script>
-        // CONFIGURAÇÕES SUPABASE
-        const SUPABASE_URL = 'https://wkvwrtwovcfnvfgleslq.supabase.co'; // Atualizado com sua URL correta
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndrdndydHdvdmNmbnZmZ2xlc2xxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIzNTE2MTQsImV4cCI6MjA2NzkyNzYxNH0.osy_C1SsPJ7t8BJlri7DpVDJU64S_IfRzy9KEBP9VMY'; // Chave pública original e funcional
+        // CONFIGURAÇÕES SUPABASE CORRETAS (URL E KEY PUBLIC)
+        const SUPABASE_URL = 'https://nctjowqvtbejbipxhhd.supabase.co'; 
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5jdGpvd3F1YnRmYmVqaXB4aGhkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODk1NjYsImV4cCI6MjA4Mjk2NTU2Nn0.63GaaShzKx0oO6n4ci0Rj3onmenYycjcE0EN7vVvErE';
         
-        // Evitar conflito de variavel global
+        // Inicializa conexão sem conflito de variável global
         console.log("Iniciando DB...");
         const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         console.log("DB Conectado!");
@@ -390,7 +390,7 @@
             localStorage.setItem('natal2026_data', JSON.stringify(participantsData));
             localStorage.setItem('natal2026_goals', JSON.stringify(monthlyGoals));
 
-            // Salva Nuvem (Tenta, mas não trava se falhar)
+            // Salva Nuvem
             const payload = { participants: participantsData, goals: monthlyGoals, fine: fineConfig };
             try {
                 await db.from('natal_2026').upsert({ id: 1, tipo: 'dados_gerais', conteudo: payload });
@@ -442,7 +442,7 @@
                 <div class="card border-l-4 border-l-indigo-500"><p class="text-slate-400 text-[10px] font-bold uppercase">Participantes</p><div class="flex items-end gap-2 mt-1"><h2 class="text-2xl font-bold text-white">${participantsData.length}</h2><span class="text-xs text-indigo-400 font-bold mb-1 px-2 rounded bg-indigo-900/30">${ok} Quitados</span></div></div>
                 <div class="card border-l-4 border-l-amber-500"><p class="text-slate-400 text-[10px] font-bold uppercase">Extra Arrecadado</p><h2 class="text-2xl font-bold text-white mt-1">R$ ${participantsData.reduce((acc, p) => acc + (p.extra || 0), 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</h2></div>
             `;
-            
+            // Charts
             document.getElementById('pieChartPercent').innerText = prog.toFixed(0) + '%';
             document.getElementById('pieChartPath').setAttribute('stroke-dasharray', `${prog}, 100`);
             document.getElementById('countOk').innerText = ok;
