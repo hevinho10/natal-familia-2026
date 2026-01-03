@@ -375,6 +375,9 @@
             // 1. Carrega local (instantâneo) e renderiza
             loadFromLocal();
             renderUI();
+            
+            // CRÍTICO: ESCONDE O LOADING IMEDIATAMENTE (SEM TRAVAR)
+            setTimeout(() => showLoading(false), 500);
 
             // 2. Tenta atualizar da nuvem em background
             if (dbClient) {
@@ -574,7 +577,7 @@
             p.extra = parseFloat(document.getElementById('editExtraValue').value) || 0;
             const b = parseInt(document.getElementById('editBirthdayMonth').value); p.birthdayMonth = b === -1 ? null : b;
             if(tempEditPhotoBase64) p.photo = tempEditPhotoBase64;
-            
+
             // Auto-multa logic
             const parts = fineConfig.deadline.split('/'); 
             const deadlineDate = new Date(parts[2], parts[1] - 1, parts[0]); deadlineDate.setHours(23, 59, 59, 999);
@@ -634,6 +637,7 @@
              }
              participantsData = newData; calculateTotalsAndRender(); saveData(); alert("Importado!");
         }
+        function showLoading(show) { document.getElementById('loadingOverlay').classList.toggle('hidden', !show); }
         function updateStatus(status) {
             const el = document.getElementById('connectionStatus');
             if(el) {
