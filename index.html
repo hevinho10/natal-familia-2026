@@ -397,6 +397,10 @@
                         <button onclick="exportParticipantsCSV()" class="bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300 px-3 py-2 rounded text-xs font-bold uppercase transition flex items-center gap-2">
                             <i class="ph ph-table text-emerald-400 text-lg"></i> Excel
                         </button>
+
+                        <button onclick="notifyDevedoresWhatsApp()" class="bg-emerald-950 hover:bg-emerald-900 border border-emerald-600 text-emerald-300 px-3 py-2 rounded text-xs font-bold uppercase transition flex items-center gap-2">
+                            <i class="ph ph-whatsapp-logo text-emerald-400 text-lg"></i> Notificar Devedores
+                        </button>
                     </div>
                 </div>
             </div>
@@ -709,11 +713,86 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Campo WhatsApp -->
+                <div class="mt-4 bg-emerald-900/10 p-3 rounded border border-emerald-500/20">
+                    <label class="text-xs font-bold uppercase text-emerald-400 block mb-2 flex items-center gap-1"><i class="ph ph-whatsapp-logo"></i> WhatsApp</label>
+                    <div class="flex items-center gap-2">
+                        <span class="text-slate-500 text-sm">+55</span>
+                        <input type="tel" id="editWhatsapp" placeholder="11999998888" class="bg-slate-900 border border-emerald-500/30 text-white rounded w-full p-1 text-sm focus:border-emerald-500 outline-none" maxlength="11">
+                    </div>
+                    <p class="text-[10px] text-slate-500 mt-1">Somente números, com DDD. Ex: 11999998888</p>
+                </div>
             </div>
 
             <div class="bg-slate-900 px-6 py-4 flex justify-end gap-3 border-t border-slate-700">
                 <button onclick="closeEditModal()" class="px-4 py-2 rounded text-sm font-bold text-slate-400 hover:text-white hover:bg-slate-800 transition">Cancelar</button>
                 <button onclick="saveEditModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded text-sm font-bold shadow-lg transition">Salvar Alterações</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Fila WhatsApp -->
+    <div id="whatsappQueueModal" class="hidden fixed inset-0 z-[150] flex items-center justify-center px-4 bg-slate-950/90 backdrop-blur-sm">
+        <div class="bg-slate-800 rounded-2xl shadow-2xl border border-slate-600 w-full max-w-md overflow-hidden fade-in">
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-emerald-900/60 to-slate-900 px-6 py-4 border-b border-slate-700 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center">
+                        <i class="ph ph-whatsapp-logo text-emerald-400 text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-white font-bold text-sm">Notificar Devedores</h3>
+                        <p id="waQueueCounter" class="text-[11px] text-slate-400">0 de 0</p>
+                    </div>
+                </div>
+                <button onclick="closeWhatsappQueue()" class="text-slate-400 hover:text-white transition"><i class="ph ph-x text-xl"></i></button>
+            </div>
+
+            <!-- Barra de progresso -->
+            <div class="h-1 bg-slate-700">
+                <div id="waProgressBar" class="h-full bg-emerald-500 transition-all duration-500" style="width:0%"></div>
+            </div>
+
+            <!-- Conteúdo do devedor atual -->
+            <div class="p-6 space-y-4">
+                <!-- Avatar + nome -->
+                <div class="flex items-center gap-3">
+                    <div id="waAvatar" class="w-12 h-12 rounded-full bg-slate-700 border-2 border-emerald-500/40 flex items-center justify-center text-lg font-bold text-slate-300 overflow-hidden flex-shrink-0"></div>
+                    <div>
+                        <p id="waName" class="text-white font-bold text-base"></p>
+                        <p id="waPhone" class="text-[11px] text-emerald-400 font-mono"></p>
+                    </div>
+                    <div class="ml-auto text-right">
+                        <p class="text-[10px] text-slate-500 uppercase font-bold">Débito total</p>
+                        <p id="waDebt" class="text-rose-400 font-bold text-lg font-mono"></p>
+                    </div>
+                </div>
+
+                <!-- Preview da mensagem -->
+                <div class="bg-slate-900/80 rounded-xl border border-slate-700 p-4 max-h-52 overflow-y-auto">
+                    <p class="text-[10px] text-slate-500 uppercase font-bold mb-2 flex items-center gap-1"><i class="ph ph-chat-text"></i> Prévia da mensagem</p>
+                    <pre id="waMsgPreview" class="text-xs text-slate-300 whitespace-pre-wrap font-sans leading-relaxed"></pre>
+                </div>
+
+                <!-- Pessoas sem número (aviso) -->
+                <div id="waSemNumeroBox" class="hidden bg-amber-900/20 border border-amber-500/30 rounded-lg p-3">
+                    <p class="text-[11px] text-amber-300 font-bold flex items-center gap-1 mb-1"><i class="ph ph-warning"></i> Sem WhatsApp cadastrado:</p>
+                    <p id="waSemNumeroNomes" class="text-[11px] text-amber-200/80"></p>
+                </div>
+            </div>
+
+            <!-- Ações -->
+            <div class="bg-slate-900 px-6 py-4 flex items-center justify-between border-t border-slate-700 gap-3">
+                <button onclick="skipWhatsapp()" class="text-slate-400 hover:text-white text-sm font-bold px-4 py-2 rounded hover:bg-slate-700 transition flex items-center gap-2">
+                    <i class="ph ph-skip-forward"></i> Pular
+                </button>
+                <div class="flex gap-2">
+                    <button onclick="closeWhatsappQueue()" class="text-slate-400 hover:text-white text-sm font-bold px-4 py-2 rounded border border-slate-600 hover:bg-slate-700 transition">Fechar</button>
+                    <button id="waOpenBtn" onclick="openCurrentWhatsapp()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-5 py-2 rounded-lg text-sm transition flex items-center gap-2 shadow-lg shadow-emerald-900/40">
+                        <i class="ph ph-whatsapp-logo"></i> Abrir WhatsApp
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -790,7 +869,7 @@
 
         function requireAdmin() {
             if (isAdmin) return true;
-            alert("Acesso restrito: somente Admin pode editar.");
+            showToast('🔒 Acesso restrito: somente Admin pode editar.', 'error');
             return false;
         }
 
@@ -1098,7 +1177,8 @@
                 peoplePending = participantsData.length - peopleOk;
             }
 
-            // Atualiza label dinâmico do card
+            // Quitados = devendo zero (independente do mês atual)
+            const peopleQuitados = participantsData.filter(p => p.missing <= 0).length;
             const _mesLabel = MONTHS_FULL[_currentMonth];
             const _vencLabel = `Vence dia ${_deadlineDay}/${String(_currentMonth + 1).padStart(2,'0')}`;
             const _statusMonthEl = document.getElementById('statusMonthLabel');
@@ -1120,7 +1200,7 @@
                     <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Participantes</p>
                     <div class="flex items-end gap-2 mt-1">
                         <h2 class="text-3xl font-bold text-white">${participantsData.length}</h2>
-                        <span class="text-xs text-indigo-300 font-bold mb-1.5 px-2 py-0.5 rounded bg-indigo-900/50 border border-indigo-500/30">${peopleOk} Quitados</span>
+                        <span class="text-xs text-emerald-300 font-bold mb-1.5 px-2 py-0.5 rounded bg-emerald-900/50 border border-emerald-500/30">${peopleQuitados} Quitados</span>
                     </div>
                 </div>
                 <div class="card border-l-4 border-l-amber-500 hover:bg-slate-800/80 transition shadow-lg">
@@ -1233,7 +1313,10 @@
                     <td class="p-2 text-right align-middle bg-slate-800/50 font-mono font-medium text-emerald-400 text-xs col-total">R$ ${(p.totalPaid).toFixed(0)}</td>
                     <td class="p-2 text-right align-middle bg-slate-800/50 border-r border-slate-700 font-mono font-medium ${p.missing > 0 ? 'text-rose-400' : 'text-slate-600'} text-xs col-falta">R$ ${p.missing.toFixed(0)}</td>
                     <td class="p-2 text-center align-middle sticky right-0 bg-slate-800 z-10 border-l border-slate-700 ${editTdClass} shadow-[-5px_0_10px_rgba(0,0,0,0.2)]">
-                        <button onclick="openEditModal(${realIndex})" class="text-indigo-400 hover:text-white p-1.5 rounded hover:bg-indigo-600 transition"><i class="ph ph-pencil-simple text-lg"></i></button>
+                        <div class="flex items-center justify-center gap-1">
+                            <button onclick="openEditModal(${realIndex})" class="text-indigo-400 hover:text-white p-1.5 rounded hover:bg-indigo-600 transition" title="Editar"><i class="ph ph-pencil-simple text-lg"></i></button>
+                            ${p.missing > 0 && p.whatsapp ? `<button onclick="notifyOneWhatsapp(${realIndex})" class="text-emerald-400 hover:text-white p-1.5 rounded hover:bg-emerald-600 transition" title="Notificar via WhatsApp"><i class="ph ph-whatsapp-logo text-lg"></i></button>` : p.missing > 0 ? `<button class="text-slate-600 p-1.5 rounded cursor-not-allowed" title="WhatsApp não cadastrado"><i class="ph ph-whatsapp-logo text-lg"></i></button>` : ''}
+                        </div>
                     </td>
                 `;
                 tbody.appendChild(row);
@@ -1242,7 +1325,7 @@
 
         // --- UI UTILS ---
         function switchTab(tabName) {
-            if(tabName === 'admin' && !isAdmin) { alert('Acesso restrito.'); return; }
+            if(tabName === 'admin' && !isAdmin) { showToast('🔒 Acesso restrito.', 'error'); return; }
             
             document.getElementById('view-dashboard').classList.add('hidden');
             document.getElementById('view-admin').classList.add('hidden');
@@ -1293,7 +1376,7 @@
             const inputs = document.querySelectorAll('[id^="goal-"]');
             inputs.forEach((input, idx) => monthlyGoals[idx] = parseFloat(input.value) || 0);
             calculateTotalsAndRender();
-            alert("Metas atualizadas com sucesso!");
+            showToast('✅ Metas atualizadas com sucesso!', 'success');
         }
 
         function renderAdminUserList() {
@@ -1383,7 +1466,7 @@
             const fineVal = fineConfig.value;
 
             if(!threshold || !fineVal || !deadlineStr) { 
-                alert("Preencha todos os campos da multa!"); return; 
+                showToast('⚠️ Preencha todos os campos da multa!', 'warning'); return; 
             }
 
             const parts = deadlineStr.split('/');
@@ -1422,7 +1505,7 @@
         // CSV Logic
         const fileInput = document.getElementById('csvInput');
         fileInput.addEventListener('change', (e) => {
-            if(!isAdmin) { alert('Acesso restrito.'); e.target.value=''; return; }
+            if(!isAdmin) { showToast('🔒 Acesso restrito.', 'error'); e.target.value=''; return; }
             const file = e.target.files[0];
             if (!file) return;
             const reader = new FileReader();
@@ -1476,10 +1559,10 @@
                     participantsData = data.participantsData;
                     syncConfigInputs();
                     calculateTotalsAndRender();
-                    alert("Backup restaurado!");
+                    showToast("✅ Backup restaurado com sucesso!", "success");
                 }
             } catch (e) {
-                alert('Erro ao ler backup JSON.');
+                showToast('❌ Erro ao ler backup JSON.', 'error');
             }
         }
         
@@ -1494,7 +1577,7 @@
             const lines = text.split('\n');
             const newData = [];
             // Basic parser expecting specific columns... simplified for demo
-            alert("Função CSV simplificada: Implementar parser completo se necessário.");
+            showToast('⚠️ Parser CSV ainda não implementado.', 'warning');
         }
 
         function exportParticipantsCSV() {
@@ -1574,6 +1657,7 @@
             document.getElementById('editFineValue').value = p.fine || 0;
             document.getElementById('editExtraValue').value = p.extra || 0;
             document.getElementById('editBirthdayMonth').value = (p.birthdayMonth === undefined || p.birthdayMonth === null) ? -1 : p.birthdayMonth;
+            document.getElementById('editWhatsapp').value = p.whatsapp || '';
 
             const container = document.getElementById('editMonthsContainer');
             container.innerHTML = '';
@@ -1608,6 +1692,7 @@
             
             p.fine = parseFloat(document.getElementById('editFineValue').value) || 0;
             p.extra = parseFloat(document.getElementById('editExtraValue').value) || 0;
+            p.whatsapp = document.getElementById('editWhatsapp').value.replace(/\D/g, '');
             
             const bMonth = parseInt(document.getElementById('editBirthdayMonth').value);
             p.birthdayMonth = bMonth === -1 ? null : bMonth;
@@ -1635,6 +1720,166 @@
             closeEditModal();
         }
         
+        // --- WHATSAPP FILA ---
+        let _waQueue = [];
+        let _waIndex = 0;
+
+        function buildWhatsappMsg(p) {
+            const _hoje = new Date();
+            const _mesAtual = _hoje.getMonth();
+            const _nomeMes = MONTHS_FULL[_mesAtual];
+            const _deadlineParts = (fineConfig.deadline || '20/12/2026').split('/');
+            const _diaVenc = _deadlineParts[0];
+            const _metaMes = monthlyGoals[_mesAtual] || 0;
+
+            const _pagueiMes = p.months[_mesAtual] || 0;
+            const _faltaMes = Math.max(0, _metaMes - _pagueiMes);
+            const _totalDevendo = p.missing.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+
+            const linhaMesAtual = _faltaMes > 0
+                ? `📅 *Parcela de ${_nomeMes}:* R$ ${_faltaMes.toLocaleString('pt-BR', {minimumFractionDigits: 2})}- prazo dia *${_diaVenc}*`
+                : `✅ Parcela de ${_nomeMes} já está em dia!`;
+
+            let detalhesMeses = '';
+            p.months.forEach((val, idx) => {
+                const meta = monthlyGoals[idx] || 0;
+                if (meta === 0) return;
+                if (p.birthdayMonth === idx) return;
+                if (idx >= _mesAtual) return;
+                if (val < meta) {
+                    const falta = (meta - val).toLocaleString('pt-BR', {minimumFractionDigits: 2});
+                    detalhesMeses += `  • ${MONTHS_FULL[idx]}: R$ ${falta} em atraso\n`;
+                }
+            });
+            if (p.fine > 0) detalhesMeses += `  • Multa: R$ ${p.fine.toLocaleString('pt-BR', {minimumFractionDigits: 2})}\n`;
+
+            return `🎁 Olá, *${p.name}*! O espírito natalino já tá por aqui... mas ele também tá de olho no calendário! 😄\n\n${linhaMesAtual}\n${detalhesMeses ? `\n⚠️ *Meses em atraso:*\n${detalhesMeses}` : ''}\n💰 *Débito total: R$ ${_totalDevendo}*\n\n🔔 Garanta nossa Casa do Natal e os momentos felizes que vamos viver juntos! Qualquer dúvida, fala com o organizador. 🎅✨`;
+        }
+
+        function notifyOneWhatsapp(index) {
+            if(!requireAdmin()) return;
+            const p = participantsData[index];
+            if (!p || p.missing <= 0) return;
+            if (!p.whatsapp || p.whatsapp.length < 10) {
+                showToast('⚠️ WhatsApp não cadastrado para ' + p.name, 'warning');
+                return;
+            }
+            // Usa o mesmo modal de fila, mas com só uma pessoa
+            _waQueue = [p];
+            _waIndex = 0;
+            document.getElementById('waSemNumeroBox').classList.add('hidden');
+            document.getElementById('whatsappQueueModal').classList.remove('hidden');
+            renderWaQueue();
+        }
+
+        function notifyDevedoresWhatsApp() {
+            if(!requireAdmin()) return;
+
+            _waQueue = participantsData.filter(p => p.missing > 0 && p.whatsapp && p.whatsapp.length >= 10);
+            const semNumero = participantsData.filter(p => p.missing > 0 && (!p.whatsapp || p.whatsapp.length < 10));
+
+            if (_waQueue.length === 0 && semNumero.length === 0) {
+                showToast('🎉 Nenhum devedor encontrado!', 'success');
+                return;
+            }
+            if (_waQueue.length === 0) {
+                showToast('⚠️ Nenhum devedor tem WhatsApp cadastrado.', 'warning');
+                return;
+            }
+
+            _waIndex = 0;
+
+            // Aviso de quem não tem número
+            const semBox = document.getElementById('waSemNumeroBox');
+            if (semNumero.length > 0) {
+                semBox.classList.remove('hidden');
+                document.getElementById('waSemNumeroNomes').textContent = semNumero.map(p => p.name).join(', ');
+            } else {
+                semBox.classList.add('hidden');
+            }
+
+            document.getElementById('whatsappQueueModal').classList.remove('hidden');
+            renderWaQueue();
+        }
+
+        function renderWaQueue() {
+            const total = _waQueue.length;
+            const p = _waQueue[_waIndex];
+
+            // Progresso
+            document.getElementById('waQueueCounter').textContent = `${_waIndex + 1} de ${total}`;
+            document.getElementById('waProgressBar').style.width = `${((_waIndex) / total) * 100}%`;
+
+            // Avatar
+            const avatarEl = document.getElementById('waAvatar');
+            if (p.photo && p.photo.trim()) {
+                avatarEl.innerHTML = `<img src="${p.photo}" class="profile-pic">`;
+            } else {
+                avatarEl.innerHTML = p.name.charAt(0).toUpperCase();
+            }
+
+            // Info
+            document.getElementById('waName').textContent = p.name;
+            document.getElementById('waPhone').textContent = `+55 (${p.whatsapp.slice(0,2)}) ${p.whatsapp.slice(2,7)}-${p.whatsapp.slice(7)}`;
+            document.getElementById('waDebt').textContent = `R$ ${p.missing.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+            document.getElementById('waMsgPreview').textContent = buildWhatsappMsg(p);
+        }
+
+        function openCurrentWhatsapp() {
+            const p = _waQueue[_waIndex];
+            const msg = encodeURIComponent(buildWhatsappMsg(p));
+            window.open(`https://wa.me/55${p.whatsapp}?text=${msg}`, '_blank');
+
+            // Avança após pequeno delay (tempo do usuário ver que abriu)
+            setTimeout(() => {
+                _waIndex++;
+                if (_waIndex >= _waQueue.length) {
+                    document.getElementById('waProgressBar').style.width = '100%';
+                    document.getElementById('waQueueCounter').textContent = `✅ Todos enviados!`;
+                    document.getElementById('waOpenBtn').disabled = true;
+                    document.getElementById('waOpenBtn').classList.add('opacity-50', 'cursor-not-allowed');
+                    showToast(`✅ ${_waQueue.length} mensagem(ns) enviada(s)!`, 'success');
+                } else {
+                    renderWaQueue();
+                }
+            }, 600);
+        }
+
+        function skipWhatsapp() {
+            _waIndex++;
+            if (_waIndex >= _waQueue.length) {
+                closeWhatsappQueue();
+            } else {
+                renderWaQueue();
+            }
+        }
+
+        function closeWhatsappQueue() {
+            document.getElementById('whatsappQueueModal').classList.add('hidden');
+            document.getElementById('waOpenBtn').disabled = false;
+            document.getElementById('waOpenBtn').classList.remove('opacity-50', 'cursor-not-allowed');
+            _waQueue = [];
+            _waIndex = 0;
+        }
+
+        // --- TOAST NOTIFICATIONS ---
+        function showToast(msg, type = 'info', duration = 3500) {
+            const colors = { success: 'bg-emerald-900 border-emerald-500 text-emerald-200', warning: 'bg-amber-900 border-amber-500 text-amber-200', error: 'bg-rose-900 border-rose-500 text-rose-200', info: 'bg-slate-800 border-slate-500 text-slate-200' };
+            const icons = { success: 'ph-check-circle', warning: 'ph-warning', error: 'ph-x-circle', info: 'ph-info' };
+            let container = document.getElementById('toastContainer');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'toastContainer';
+                container.className = 'fixed bottom-5 right-5 z-[999] flex flex-col gap-2';
+                document.body.appendChild(container);
+            }
+            const toast = document.createElement('div');
+            toast.className = `flex items-start gap-3 px-4 py-3 rounded-lg border shadow-xl text-sm font-medium max-w-sm ${colors[type]} fade-in`;
+            toast.innerHTML = `<i class="ph ${icons[type]} text-lg flex-shrink-0 mt-0.5"></i><span>${msg}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.4s'; setTimeout(() => toast.remove(), 400); }, duration);
+        }
+
         // Search
         document.getElementById('searchInput').addEventListener('keyup', (e) => {
             const term = e.target.value.toLowerCase();
