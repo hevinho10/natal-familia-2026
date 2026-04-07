@@ -1737,8 +1737,8 @@
             const _totalDevendo = p.missing.toLocaleString('pt-BR', {minimumFractionDigits: 2});
 
             const linhaMesAtual = _faltaMes > 0
-                ? `📅 *Parcela de ${_nomeMes}:* R$ ${_faltaMes.toLocaleString('pt-BR', {minimumFractionDigits: 2})}- prazo dia *${_diaVenc}*`
-                : `✅ Parcela de ${_nomeMes} já está em dia!`;
+                ? `\uD83D\uDCC5 *Parcela de ${_nomeMes}:* R$ ${_faltaMes.toLocaleString('pt-BR', {minimumFractionDigits: 2})} \u2014 prazo dia *${_diaVenc}*`
+                : `\u2705 Parcela de ${_nomeMes} j\u00E1 est\u00E1 em dia!`;
 
             let detalhesMeses = '';
             p.months.forEach((val, idx) => {
@@ -1748,12 +1748,12 @@
                 if (idx >= _mesAtual) return;
                 if (val < meta) {
                     const falta = (meta - val).toLocaleString('pt-BR', {minimumFractionDigits: 2});
-                    detalhesMeses += `  • ${MONTHS_FULL[idx]}: R$ ${falta} em atraso\n`;
+                    detalhesMeses += `  \u2022 ${MONTHS_FULL[idx]}: R$ ${falta} em atraso\n`;
                 }
             });
-            if (p.fine > 0) detalhesMeses += `  • Multa: R$ ${p.fine.toLocaleString('pt-BR', {minimumFractionDigits: 2})}\n`;
+            if (p.fine > 0) detalhesMeses += `  \u2022 Multa: R$ ${p.fine.toLocaleString('pt-BR', {minimumFractionDigits: 2})}\n`;
 
-            return `🎁 Olá, *${p.name}*! O espírito natalino já tá por aqui... mas ele também tá de olho no calendário! 😄\n\n${linhaMesAtual}\n${detalhesMeses ? `\n⚠️ *Meses em atraso:*\n${detalhesMeses}` : ''}\n💰 *Débito total: R$ ${_totalDevendo}*\n\n🔔 Garanta nossa Casa do Natal e os momentos felizes que vamos viver juntos! Qualquer dúvida, fala com o organizador. 🎅✨`;
+            return `\uD83C\uDF81 Ol\u00E1, *${p.name}*! O esp\u00EDrito natalino j\u00E1 t\u00E1 por aqui... mas ele tamb\u00E9m t\u00E1 de olho no calend\u00E1rio! \uD83D\uDE04\n\n${linhaMesAtual}\n${detalhesMeses ? `\n\u26A0\uFE0F *Meses em atraso:*\n${detalhesMeses}` : ''}\n\uD83D\uDCB0 *D\u00E9bito total: R$ ${_totalDevendo}*\n\n\uD83D\uDD14 Garanta nossa Casa do Natal e os momentos felizes que vamos viver juntos! Qualquer d\u00FAvida, fala com o organizador. \uD83C\uDF85\u2728`;
         }
 
         function notifyOneWhatsapp(index) {
