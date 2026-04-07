@@ -233,7 +233,7 @@
         .tree-cover{
             fill: #1e293b; /* Mesma cor do card */
             transition: transform 1.5s ease;
-            transform-origin: bottom;
+            transform-origin: top;
             transform-box: fill-box;
             will-change: transform;
         }
@@ -259,7 +259,12 @@
             50% { transform: scale(1.1); opacity: 0.8; }
         }
         
-        /* Modal Transitions */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-6px); }
+            40%, 80% { transform: translateX(6px); }
+        }
+        .shake { animation: shake 0.4s ease; }
         dialog { transition: opacity 0.3s; }
         dialog::backdrop { background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); }
 
@@ -299,7 +304,7 @@
                         <label class="block text-xs font-bold tracking-wider text-slate-500 mb-1">USUÁRIO</label>
                         <div class="relative">
                             <i class="ph ph-user absolute left-3 top-3 text-slate-500"></i>
-                            <input id="loginUser" class="input-dark pl-10" placeholder="Ex: admin" autocomplete="username" />
+                            <input id="loginUser" class="input-dark pl-10" placeholder="Ex: admin" autocomplete="username" onkeydown="if(event.key==='Enter') document.getElementById('loginPass').focus()" />
                         </div>
                     </div>
 
@@ -307,7 +312,10 @@
                         <label class="block text-xs font-bold tracking-wider text-slate-500 mb-1">SENHA</label>
                         <div class="relative">
                             <i class="ph ph-lock-key absolute left-3 top-3 text-slate-500"></i>
-                            <input id="loginPass" type="password" class="input-dark pl-10" placeholder="••••••••" autocomplete="current-password" />
+                            <input id="loginPass" type="password" class="input-dark pl-10 pr-10" placeholder="••••••••" autocomplete="current-password" />
+                            <button type="button" onclick="toggleLoginPassVisibility()" class="absolute right-3 top-2.5 text-slate-500 hover:text-slate-300 transition" tabindex="-1">
+                                <i id="loginPassEyeIcon" class="ph ph-eye text-lg"></i>
+                            </button>
                         </div>
                     </div>
 
@@ -317,12 +325,6 @@
                         ACESSAR SISTEMA
                     </button>
                     
-                    <div class="text-center mt-4">
-                        <p class="text-[10px] text-slate-500">
-                            Acesso Admin: <strong>admin / Admin2026</strong><br>
-                            Acesso Leitura: <strong>natal / 2026</strong>
-                        </p>
-                    </div>
                 </div>
             </div>
         </div>
@@ -810,7 +812,30 @@
             });
         }
 
+        function toggleLoginPassVisibility() {
+            const input = document.getElementById('loginPass');
+            const icon = document.getElementById('loginPassEyeIcon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.className = 'ph ph-eye-slash text-lg';
+            } else {
+                input.type = 'password';
+                icon.className = 'ph ph-eye text-lg';
+            }
+        }
+
         function doLogin() {
+            const btn = document.getElementById('loginBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="ph ph-spinner animate-spin mr-2"></i>Verificando...';
+            setTimeout(() => {
+                _doLoginLogic();
+                btn.disabled = false;
+                btn.innerHTML = 'ACESSAR SISTEMA';
+            }, 400);
+        }
+
+        function _doLoginLogic() {
             const user = (document.getElementById('loginUser').value || '').trim().toLowerCase();
             const pass = (document.getElementById('loginPass').value || '').trim();
             const err = document.getElementById('loginError');
@@ -819,6 +844,11 @@
             if (!rec || rec.password !== pass) {
                 err.innerText = 'Usuário ou senha incorretos.';
                 err.classList.remove('hidden');
+                err.classList.remove('shake');
+                void err.offsetWidth; // reflow para reiniciar animação
+                err.classList.add('shake');
+                document.getElementById('loginPass').value = '';
+                document.getElementById('loginPass').focus();
                 return;
             }
 
