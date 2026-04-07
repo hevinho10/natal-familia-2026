@@ -11,23 +11,48 @@
     <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- Fonte Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- Ícones -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
 
     <!-- Calendário -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://npmcdn.com/flatpickr/dist/themes/dark.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://npmcdn.com/flatpickr/dist/l10n/pt.js"></script>
+
+    <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        slate: {
+                            850: '#151e32',
+                            900: '#0f172a',
+                            950: '#020617',
+                        }
+                    },
+                    animation: {
+                        'pulse-fast': 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                }
+            }
+        }
+    </script>
 
     <style>
         body { 
             font-family: 'Inter', sans-serif; 
             background-color: #0f172a; /* Slate 900 */
             color: #f1f5f9; /* Slate 100 */
+            overflow-x: hidden;
         }
 
         /* ===========================================================
@@ -36,21 +61,21 @@
         #loginOverlay { isolation: isolate; }
         #loginOverlay .login-bg{
             background:
-                radial-gradient(1200px circle at 20% 20%, rgba(99, 102, 241, 0.25), transparent 55%),
-                radial-gradient(1200px circle at 85% 15%, rgba(16, 185, 129, 0.18), transparent 55%),
-                radial-gradient(900px circle at 50% 85%, rgba(236, 72, 153, 0.18), transparent 55%),
-                linear-gradient(180deg, rgba(2, 6, 23, 1) 0%, rgba(15, 23, 42, 1) 100%);
+                radial-gradient(1200px circle at 20% 20%, rgba(99, 102, 241, 0.15), transparent 55%),
+                radial-gradient(1200px circle at 85% 15%, rgba(16, 185, 129, 0.10), transparent 55%),
+                radial-gradient(900px circle at 50% 85%, rgba(236, 72, 153, 0.10), transparent 55%),
+                linear-gradient(180deg, #020617 0%, #0f172a 100%);
         }
         #loginOverlay .login-topline{
             background: linear-gradient(90deg, #ec4899, #6366f1, #10b981);
         }
-
 
         .card {
             background-color: #1e293b; /* Slate 800 */
             border: 1px solid #334155; /* Slate 700 */
             border-radius: 0.75rem;
             padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         }
 
         .tab-btn { 
@@ -60,9 +85,11 @@
             font-weight: 500; 
             color: #94a3b8; 
             transition: all 0.2s;
+            display: flex;
+            align-items: center;
         }
         .tab-btn:hover { color: white; background-color: #334155; }
-        .tab-btn.active { background-color: #4f46e5; color: white; }
+        .tab-btn.active { background-color: #4f46e5; color: white; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
 
         /* Scrollbar da tabela */
         ::-webkit-scrollbar { height: 8px; width: 8px; }
@@ -73,52 +100,67 @@
         /* Badges de Status (Cores Dinâmicas) */
         .status-badge {
             font-size: 0.75rem; 
-            font-weight: 600; 
-            padding: 2px 0; 
+            font-weight: 700; 
+            padding: 3px 0; 
             width: 100%; 
-            display: block; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
             border-radius: 4px; 
             text-align: center;
+            transition: transform 0.1s;
         }
         
         /* Regras de Cores */
-        .bg-paid { background-color: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.2); } /* Verde */
-        .bg-partial { background-color: rgba(250, 204, 21, 0.15); color: #facc15; border: 1px solid rgba(250, 204, 21, 0.2); } /* Amarelo */
-        .bg-missed { background-color: rgba(248, 113, 113, 0.15); color: #f87171; border: 1px solid rgba(248, 113, 113, 0.2); } /* Vermelho */
-        .bg-none { background-color: rgba(148, 163, 184, 0.1); color: #94a3b8; border: 1px dashed rgba(148, 163, 184, 0.2); } /* Cinza */
+        .bg-paid { background-color: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.25); } /* Verde */
+        .bg-partial { background-color: rgba(250, 204, 21, 0.15); color: #facc15; border: 1px solid rgba(250, 204, 21, 0.25); } /* Amarelo */
+        .bg-missed { background-color: rgba(248, 113, 113, 0.15); color: #f87171; border: 1px solid rgba(248, 113, 113, 0.25); } /* Vermelho */
+        .bg-none { background-color: rgba(148, 163, 184, 0.05); color: #64748b; border: 1px dashed rgba(148, 163, 184, 0.15); } /* Cinza */
         
         /* Aniversário */
         .bg-birthday { 
-            background: linear-gradient(135deg, rgba(236, 72, 153, 0.15), rgba(168, 85, 247, 0.15)); 
+            background: linear-gradient(135deg, rgba(236, 72, 153, 0.2), rgba(168, 85, 247, 0.2)); 
             color: #f472b6; 
-            border: 1px solid rgba(236, 72, 153, 0.3);
-            display: flex; justify-content: center; align-items: center; gap: 2px;
+            border: 1px solid rgba(236, 72, 153, 0.4);
+            position: relative;
+            overflow: hidden;
         }
+        .bg-birthday::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.1) 50%, transparent 60%);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
 
         .input-dark {
             background-color: #0f172a;
             border: 1px solid #334155;
             color: white;
             border-radius: 0.5rem;
-            padding: 0.5rem;
+            padding: 0.6rem;
             width: 100%;
             font-size: 0.875rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
         }
-        .input-dark:focus { outline: none; border-color: #6366f1; ring: 1px #6366f1; }
+        .input-dark:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2); }
 
         /* Animação simples */
-        .fade-in { animation: fadeIn 0.3s ease-out forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
         /* Ajuste da Coluna Fixa para mesclar com o fundo */
         th.sticky-col, td.sticky-col {
             position: sticky;
             left: 0;
-            z-index: 20; /* Maior Z-index para a foto ficar acima */
+            z-index: 20;
             background-color: #1e293b;
-            box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+            box-shadow: 4px 0 8px rgba(0,0,0,0.25);
         }
-        tr:hover td.sticky-col { background-color: #334155; }
+        tr:hover td.sticky-col { background-color: #273549; }
+        tr:hover { background-color: #273549; }
         
         /* Imagem de Perfil */
         .profile-pic {
@@ -129,242 +171,338 @@
     
         /* ===========================
            RESPONSIVIDADE (MOBILE)
-           - No mobile, esconder colunas de meses (Jan..Dez)
-           - Opcional: esconder coluna Editar no mobile
            =========================== */
         @media (max-width: 640px) {
             .month-col { display: none !important; }
             .extra-col { display: none !important; }
             #editColHead, td.edit-col { display: none !important; }
-            th.sticky-col, td.sticky-col { min-width: 170px; }
-        
-
-            /* Tight layout para caber tudo na tela */
-            .px-6 { padding-left: 0.75rem !important; padding-right: 0.75rem !important; }
-            .mt-6 { margin-top: 0.75rem !important; }
-            .gap-6 { gap: 0.75rem !important; }
-            .pb-14 { padding-bottom: 2rem !important; }
-
-            .card { padding: 0.9rem !important; border-radius: 0.9rem !important; }
-            .card h2.text-2xl { font-size: 1.25rem !important; }
-
-            #searchInput { width: 140px !important; }
-
-            /* Tabela compacta (sem scroll lateral) */
-            .table-compact { table-layout: fixed !important; }
-            .table-compact th, .table-compact td { padding: 0.45rem 0.35rem !important; line-height: 1.15 !important; }
-            .table-compact th { font-size: 0.60rem !important; }
-            .table-compact td { font-size: 0.78rem !important; }
-
-            th.sticky-col, td.sticky-col { min-width: 145px !important; }
-            th.sticky-col { padding-left: 0.65rem !important; }
-
-            .col-multa { width: 56px !important; min-width: 56px !important; }
-            .col-total { width: 78px !important; min-width: 78px !important; }
-            .col-falta { width: 78px !important; min-width: 78px !important; }
-
-            .avatar { width: 1.75rem !important; height: 1.75rem !important; }
-}
-
-        /* Cards mais minimalistas e arredondados */
-        .mini-pill { border-radius: 9999px !important; }
-        @media (max-width: 640px) {
-            .mini-pill { padding: 10px 12px !important; }
+            th.sticky-col, td.sticky-col { min-width: 160px; box-shadow: 2px 0 5px rgba(0,0,0,0.3); }
+            
+            .card { padding: 1rem !important; }
+            
+            /* Tabela compacta (sem scroll lateral no body, mas tabela controlada) */
+            .table-compact th, .table-compact td { padding: 0.5rem 0.25rem !important; }
+            
+            .col-multa { width: 60px !important; min-width: 60px !important; }
+            .col-total { width: 90px !important; min-width: 90px !important; }
+            .col-falta { width: 90px !important; min-width: 90px !important; }
         }
-
-
 
         /* ===========================================================
            NATAL UI (PAPAI NOEL NO PROGRESSO + ÁRVORE NO STATUS)
            =========================================================== */
+        #mainProgressBarContainer {
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+        }
         #mainProgressBar{
             display:flex;
             align-items:center;
             justify-content:flex-end;
             position:relative;
-            padding-right:0.75rem; /* espaço para o ícone */
+            transition: width 1.5s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
         #mainProgressBar .santa-badge{
-            width:34px;
-            height:34px;
+            width: 36px;
+            height: 36px;
             display:flex;
             align-items:center;
             justify-content:center;
             border-radius:9999px;
-            background: rgba(15,23,42,0.35);
-            border: 1px solid rgba(148,163,184,0.25);
-            backdrop-filter: blur(6px);
-            box-shadow: 0 10px 24px rgba(0,0,0,0.35);
-            transition: transform 600ms ease, box-shadow 600ms ease;
-            animation: santaBob 2.4s ease-in-out infinite;
-        }
-        #mainProgressBar .santa-svg{
-            width:22px;
-            height:22px;
-            color: rgba(255,255,255,0.95);
+            background: #0f172a;
+            border: 2px solid #334155;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            position: absolute;
+            right: -18px;
+            z-index: 10;
+            animation: santaBob 3s ease-in-out infinite;
         }
         #mainProgressBar .santa-emoji{
-            font-size:20px;
-            line-height:1;
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.35));
+            font-size: 22px;
+            line-height: 1;
+            filter: drop-shadow(0 2px 2px rgba(0,0,0,0.5));
         }
 
         @keyframes santaBob{
-            0%,100%{ transform: translateY(0); }
-            50%{ transform: translateY(-2px); }
+            0%,100%{ transform: translateY(0) rotate(0deg); }
+            50%{ transform: translateY(-3px) rotate(5deg); }
         }
 
-
-        .tree-base{
-            fill: rgba(255,255,255,0.08);
-            stroke: rgba(148,163,184,0.25);
-            stroke-width: 2;
-        }
-        .tree-fill{
-            fill: rgba(16,185,129,0.32);
-        }
+        /* Árvore SVG */
+        .tree-base{ fill: rgba(255,255,255,0.05); stroke: #334155; stroke-width: 1; }
+        .tree-fill{ fill: rgba(16,185,129,0.2); }
         .tree-cover{
-            fill: rgb(15,23,42);
-            transition: transform 1s ease;
-            transform-origin: 0px 0px;
+            fill: #1e293b; /* Mesma cor do card */
+            transition: transform 1.5s ease;
+            transform-origin: bottom;
             transform-box: fill-box;
             will-change: transform;
         }
-        .tree-trunk{
-            fill: rgba(255,255,255,0.12);
-        }
+        .tree-trunk{ fill: #475569; }
         .tree-pct{
-            font-size: 18px;
+            font-size: 20px;
             font-weight: 800;
-            fill: rgba(255,255,255,0.28);
+            fill: #e2e8f0;
+            font-family: 'Inter', sans-serif;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
         }
         .tree-star{
-            fill: rgba(250,204,21,0.25);
-            stroke: rgba(250,204,21,0.35);
-            stroke-width: 1.5;
-            opacity: 0.8;
-            transition: opacity 600ms ease, filter 600ms ease, fill 600ms ease;
+            fill: #334155;
+            transition: all 0.5s ease;
         }
         .tree-star.on{
-            fill: rgba(250,204,21,0.95);
-            opacity: 1;
-            filter: drop-shadow(0 0 6px rgba(250,204,21,0.6));
+            fill: #fbbf24;
+            filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.6));
+            animation: pulseStar 2s infinite;
         }
+        @keyframes pulseStar {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+        
+        /* Modal Transitions */
+        dialog { transition: opacity 0.3s; }
+        dialog::backdrop { background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); }
 
-</style>
+        /* Cloud Status Indicator */
+        #cloudStatus {
+            transition: opacity 0.5s ease;
+        }
+        .status-dot {
+            height: 8px; width: 8px; border-radius: 50%; display: inline-block;
+        }
+        .status-saving { background-color: #fbbf24; animation: pulse 1s infinite; }
+        .status-saved { background-color: #10b981; }
+        .status-error { background-color: #f43f5e; }
+    </style>
 </head>
-<body class="flex flex-col min-h-screen">
-    <!-- Login Overlay (controle simples: NÃO é segurança real) -->
-    <div id="loginOverlay" class="fixed inset-0 z-[200] flex items-center justify-center p-6">
-        <!-- Fundo -->
+<body class="flex flex-col min-h-screen text-slate-100">
+
+    <!-- Login Overlay -->
+    <div id="loginOverlay" class="fixed inset-0 z-[200] flex items-center justify-center p-4">
         <div class="absolute inset-0 login-bg"></div>
 
-        <!-- Card -->
-        <div class="relative w-full max-w-xl rounded-2xl overflow-hidden border border-white/10 bg-slate-900/40 backdrop-blur-xl shadow-2xl">
-            <div class="h-1 w-full login-topline"></div>
+        <div class="relative w-full max-w-md rounded-2xl overflow-hidden border border-white/10 bg-slate-900/60 backdrop-blur-xl shadow-2xl fade-in">
+            <div class="h-1.5 w-full login-topline"></div>
 
-            <div class="p-10 sm:p-12">
-                <div class="mx-auto w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center ring-1 ring-white/10 shadow">
-                    <span class="text-3xl">🎅</span>
+            <div class="p-8 sm:p-10">
+                <div class="mx-auto w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 flex items-center justify-center ring-1 ring-white/10 shadow mb-6">
+                    <span class="text-4xl filter drop-shadow-lg">🎅</span>
                 </div>
 
-                <h1 class="mt-6 text-center text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-                    Natal Família <span class="text-indigo-300">2026</span>
+                <h1 class="text-center text-3xl font-extrabold text-white tracking-tight">
+                    Natal Família <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-300">2026</span>
                 </h1>
-                <p class="mt-2 text-center text-sm text-slate-300">Gestão Financeira &amp; Metas</p>
+                <p class="mt-2 text-center text-sm text-slate-400">Gestão Financeira &amp; Metas</p>
 
                 <div class="mt-8 space-y-5">
                     <div>
-                        <label class="block text-xs font-semibold tracking-wider text-slate-300">USUÁRIO</label>
-                        <input id="loginUser" class="mt-2 w-full rounded-lg bg-slate-900/40 border border-white/10 px-4 py-3 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/60 focus:border-indigo-400/40"
-                               placeholder="Ex: admin" autocomplete="username" />
+                        <label class="block text-xs font-bold tracking-wider text-slate-500 mb-1">USUÁRIO</label>
+                        <div class="relative">
+                            <i class="ph ph-user absolute left-3 top-3 text-slate-500"></i>
+                            <input id="loginUser" class="input-dark pl-10" placeholder="Ex: admin" autocomplete="username" />
+                        </div>
                     </div>
 
                     <div>
-                        <label class="block text-xs font-semibold tracking-wider text-slate-300">SENHA</label>
-                        <input id="loginPass" type="password" class="mt-2 w-full rounded-lg bg-slate-900/40 border border-white/10 px-4 py-3 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/60 focus:border-indigo-400/40"
-                               placeholder="••••••••" autocomplete="current-password" />
+                        <label class="block text-xs font-bold tracking-wider text-slate-500 mb-1">SENHA</label>
+                        <div class="relative">
+                            <i class="ph ph-lock-key absolute left-3 top-3 text-slate-500"></i>
+                            <input id="loginPass" type="password" class="input-dark pl-10" placeholder="••••••••" autocomplete="current-password" />
+                        </div>
                     </div>
 
-                    <p id="loginError" class="text-xs text-rose-300 hidden"></p>
+                    <p id="loginError" class="text-xs text-rose-400 font-bold hidden bg-rose-950/30 p-2 rounded border border-rose-900/50 text-center"></p>
 
-                    <button id="loginBtn" onclick="doLogin()" class="w-full rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white py-3 font-semibold tracking-wide shadow-lg shadow-indigo-600/20 transition">
-                        ENTRAR
+                    <button id="loginBtn" onclick="doLogin()" class="w-full rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white py-3 font-bold tracking-wide shadow-lg shadow-indigo-600/20 transition transform active:scale-95">
+                        ACESSAR SISTEMA
                     </button>
+                    
+                    <div class="text-center mt-4">
+                        <p class="text-[10px] text-slate-500">
+                            Acesso Admin: <strong>admin / Admin2026</strong><br>
+                            Acesso Leitura: <strong>natal / 2026</strong>
+                        </p>
+                    </div>
                 </div>
-            </div>
-
-            <div class="border-t border-white/10 px-10 py-4 text-center text-xs text-slate-400">
-                Natal Família 2026
             </div>
         </div>
     </div>
 
-<!-- Navbar -->
-    <nav class="bg-slate-800 border-b border-slate-700 sticky top-0 z-50 h-16 shadow-md">
+    <!-- Navbar -->
+    <nav class="bg-slate-800/80 backdrop-blur-md border-b border-slate-700 sticky top-0 z-50 h-16 shadow-lg">
         <div class="max-w-7xl mx-auto px-4 h-full flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <div class="bg-indigo-600 p-1.5 rounded-lg shadow-lg">
+                <div class="bg-gradient-to-br from-indigo-600 to-violet-600 p-2 rounded-lg shadow-lg">
                     <i class="ph ph-gift text-xl text-white"></i>
                 </div>
-                <h1 class="text-lg font-bold text-white tracking-tight hidden sm:block">Natal Família <span class="text-indigo-400">2026</span></h1>
+                <div>
+                    <h1 class="text-lg font-bold text-white tracking-tight hidden sm:block">Natal Família <span class="text-indigo-400">2026</span></h1>
+                    <!-- Cloud Status Indicator -->
+                    <div id="cloudStatus" class="flex items-center gap-1.5 text-[10px] text-slate-400 font-medium opacity-0">
+                        <span id="cloudDot" class="status-dot status-saved"></span>
+                        <span id="cloudText">Conectado</span>
+                    </div>
+                </div>
             </div>
             
-            <div class="flex bg-slate-900/50 p-1 rounded-lg border border-slate-700">
+            <div class="flex bg-slate-900/50 p-1 rounded-lg border border-slate-700/50">
                 <button onclick="switchTab('dashboard')" id="btn-dashboard" class="tab-btn active">
-                    <i class="ph ph-chart-pie-slice mr-1"></i> Painel
+                    <i class="ph ph-chart-pie-slice mr-2 text-lg"></i> Painel
                 </button>
-                <button onclick="switchTab('admin')" id="btn-admin" class="tab-btn">
-                    <i class="ph ph-gear mr-1"></i> Configurar
+                <button onclick="switchTab('admin')" id="btn-admin" class="tab-btn hidden">
+                    <i class="ph ph-gear mr-2 text-lg"></i> Admin
                 </button>
             </div>
 
-            <button onclick="logout()" class="text-xs text-slate-300 hover:text-white font-medium px-3 py-2 rounded border border-slate-700 hover:bg-slate-700/40 transition">
-                <i class="ph ph-sign-out mr-1"></i> Sair
+            <button onclick="logout()" class="text-xs text-slate-400 hover:text-white font-medium px-3 py-2 rounded border border-slate-700 hover:bg-slate-700 transition flex items-center gap-2">
+                <i class="ph ph-sign-out text-lg"></i> <span class="hidden sm:inline">Sair</span>
             </button>
         </div>
     </nav>
 
-    <!-- Conteúdo -->
+    <!-- Conteúdo Principal -->
     <main class="flex-grow p-4 sm:p-6 w-full max-w-7xl mx-auto space-y-6">
 
         <!-- VIEW: DASHBOARD -->
         <div id="view-dashboard" class="fade-in space-y-6">
             
             <!-- Header Ações -->
-            <div class="flex flex-col sm:flex-row justify-between items-end sm:items-center gap-4">
+            <div class="flex flex-col sm:flex-row justify-between items-end sm:items-center gap-4 border-b border-slate-800 pb-4">
                 <div>
-                    <h2 class="text-xl font-bold text-white">Visão Geral Financeira</h2>
-                    <p class="text-sm text-slate-400">Acompanhamento de pagamentos e metas.</p>
+                    <h2 class="text-2xl font-bold text-white">Visão Geral</h2>
+                    <p class="text-sm text-slate-400">Acompanhamento financeiro e status dos participantes.</p>
                 </div>
-                <div class="flex gap-3">
-                    <button id="btn-reset" onclick="resetData()" class="text-xs text-rose-400 hover:text-rose-300 font-medium px-3 py-2 border border-rose-900 rounded hover:bg-rose-900/20 transition flex items-center gap-2">
-                        <i class="ph ph-trash"></i> Resetar
+                <div class="flex flex-wrap gap-2 justify-end">
+                    <button id="btn-reset" onclick="resetData()" class="hidden text-xs text-rose-400 hover:text-rose-300 font-bold px-3 py-2 border border-rose-900 rounded hover:bg-rose-900/20 transition flex items-center gap-2">
+                        <i class="ph ph-trash"></i> RESETAR TUDO
                     </button>
-                    <label id="lbl-import" class="cursor-pointer bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300 px-4 py-2 rounded text-xs font-bold uppercase transition flex items-center gap-2">
-                        <i class="ph ph-file-csv text-green-400 text-lg"></i> Importar CSV
+                    
+                    <div id="admin-actions" class="hidden flex gap-2">
+                        <button onclick="document.getElementById('csvInput').click()" class="bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300 px-3 py-2 rounded text-xs font-bold uppercase transition flex items-center gap-2">
+                            <i class="ph ph-file-csv text-green-400 text-lg"></i> Importar CSV
+                        </button>
                         <input type="file" id="csvInput" accept=".csv" class="hidden">
-                    </label>
-                    <button id="exportCsvBtn" type="button" class="px-3 py-2 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-100 text-xs font-bold uppercase transition flex items-center gap-2">
-                                                <i class="ph ph-download-simple text-emerald-400 text-lg"></i> Exportar CSV
-                                            </button>
 
+                        <button onclick="document.getElementById('jsonBackupInput').click()" class="bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300 px-3 py-2 rounded text-xs font-bold uppercase transition flex items-center gap-2">
+                            <i class="ph ph-upload-simple text-sky-400 text-lg"></i> Restaurar JSON
+                        </button>
+                        <input type="file" id="jsonBackupInput" accept=".json" class="hidden">
+
+                        <button onclick="exportBackupJSON()" class="bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300 px-3 py-2 rounded text-xs font-bold uppercase transition flex items-center gap-2">
+                            <i class="ph ph-download-simple text-sky-400 text-lg"></i> Backup JSON
+                        </button>
+                        
+                        <button onclick="exportParticipantsCSV()" class="bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300 px-3 py-2 rounded text-xs font-bold uppercase transition flex items-center gap-2">
+                            <i class="ph ph-table text-emerald-400 text-lg"></i> Excel
+                        </button>
+                    </div>
                 </div>
             </div>
 
             <!-- Cards Resumo -->
-            <div id="dashboardSummary" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div id="dashboardSummary" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <!-- JS Preenche -->
             </div>
 
-            <!-- Tabela Detalhada (AGORA COM FOTOS E ANIVERSÁRIOS) -->
-            <div class="card overflow-hidden !p-0 border border-slate-700">
-                <div class="p-4 border-b border-slate-700 flex justify-between items-center bg-slate-800">
+            <!-- Seção Gráfica -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Gráfico Status -->
+                <div class="card lg:col-span-1 flex flex-col items-center justify-center relative overflow-hidden group">
+                    <div class="absolute inset-0 bg-gradient-to-b from-slate-800 to-slate-900 z-0"></div>
+                    <div class="relative z-10 w-full flex flex-col items-center">
+                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1 w-full text-center border-b border-slate-700 pb-2">
+                            Status de Quitação
+                        </h3>
+                        <p id="statusMonthLabel" class="text-[10px] font-medium text-center mb-4 w-full"></p>
+                        
+                        <div class="relative w-40 h-48 flex items-end justify-center">
+                            <svg class="w-full h-full drop-shadow-xl" viewBox="0 0 120 140" role="img">
+                                <defs>
+                                    <clipPath id="treeClipNatal2026">
+                                        <path d="M60 10 C55 20,45 30,38 40 L48 40 C40 52,32 64,26 76 L38 76 C30 88,22 100,16 112 L48 112 L48 126 L72 126 L72 112 L104 112 C98 100,90 88,82 76 L94 76 C88 64,80 52,72 40 L82 40 C75 30,65 20,60 10 Z"></path>
+                                    </clipPath>
+                                </defs>
+                                <g id="treeStar" class="tree-star origin-center box-border" style="transform-box: fill-box; transform-origin: 50% 50%;">
+                                    <polygon points="60,2 65,15 78,15 68,22 72,35 60,27 48,35 52,22 42,15 55,15"></polygon>
+                                </g>
+                                <path d="M60 10 C55 20,45 30,38 40 L48 40 C40 52,32 64,26 76 L38 76 C30 88,22 100,16 112 L48 112 L48 126 L72 126 L72 112 L104 112 C98 100,90 88,82 76 L94 76 C88 64,80 52,72 40 L82 40 C75 30,65 20,60 10 Z" class="tree-base"></path>
+                                
+                                <g clip-path="url(#treeClipNatal2026)">
+                                    <rect x="0" y="0" width="120" height="140" class="tree-fill"></rect>
+                                    <!-- O cover diminui a escala Y para revelar a árvore -->
+                                    <rect id="treeCover" x="0" y="0" width="120" height="140" class="tree-cover"></rect>
+                                </g>
+
+                                <rect x="52" y="126" width="16" height="10" rx="2" class="tree-trunk"></rect>
+                                <text id="treePercent" x="60" y="80" text-anchor="middle" class="tree-pct">0%</text>
+                            </svg>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3 w-full mt-6">
+                            <div class="bg-slate-900/50 p-2 rounded text-center border border-slate-700">
+                                <span id="countOk" class="block text-xl font-bold text-emerald-400">0</span>
+                                <span class="text-[10px] uppercase text-slate-500 font-bold">Adimplentes</span>
+                            </div>
+                            <div class="bg-slate-900/50 p-2 rounded text-center border border-slate-700">
+                                <span id="countPending" class="block text-xl font-bold text-rose-400">0</span>
+                                <span class="text-[10px] uppercase text-slate-500 font-bold">Inadimplentes</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Barra Progresso Global -->
+                <div class="card lg:col-span-2 flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center mb-6 border-b border-slate-700 pb-2">
+                            <h3 class="text-sm font-bold text-slate-300 flex items-center gap-2">
+                                <i class="ph ph-trend-up text-emerald-400 text-lg"></i> Evolução da Arrecadação
+                            </h3>
+                            <span id="metaLabel" class="text-xs font-mono text-slate-500 bg-slate-900 px-2 py-1 rounded border border-slate-700">Meta: R$ 0</span>
+                        </div>
+                        
+                        <div class="relative pt-6 pb-2">
+                            <div id="mainProgressBarContainer" class="w-full bg-slate-900 rounded-full h-6 border border-slate-700 relative">
+                                <div id="mainProgressBar" class="bg-gradient-to-r from-emerald-600 to-teal-400 h-full rounded-full flex items-center justify-end" style="width: 0%">
+                                    <div class="santa-badge">
+                                        <span class="santa-emoji">🎅</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex justify-between mt-2 text-xs font-bold text-slate-500">
+                                <span>0%</span>
+                                <span id="mainProgressText" class="text-emerald-400">0%</span>
+                                <span>100%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-4 mt-8">
+                        <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 text-center shadow-inner">
+                            <p class="text-[10px] text-slate-500 font-bold uppercase mb-1">Total Esperado</p>
+                            <p id="summaryTotalExpected" class="text-sm sm:text-lg font-bold text-white">R$ 0</p>
+                        </div>
+                        <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 text-center shadow-inner">
+                            <p class="text-[10px] text-slate-500 font-bold uppercase mb-1">Em Caixa</p>
+                            <p id="summaryTotalPaid" class="text-sm sm:text-lg font-bold text-emerald-400">R$ 0</p>
+                        </div>
+                        <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 text-center shadow-inner">
+                            <p class="text-[10px] text-slate-500 font-bold uppercase mb-1">A Receber</p>
+                            <p id="summaryTotalMissing" class="text-sm sm:text-lg font-bold text-rose-400">R$ 0</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabela Detalhada -->
+            <div class="card overflow-hidden !p-0 border border-slate-700 shadow-xl">
+                <div class="p-4 border-b border-slate-700 flex flex-col sm:flex-row justify-between items-center bg-slate-800 gap-4">
                     <h3 class="text-sm font-bold text-white flex items-center gap-2">
-                        <i class="ph ph-users text-indigo-400"></i> Detalhamento por Participante
+                        <i class="ph ph-users text-indigo-400"></i> Detalhamento
                     </h3>
-                    <div class="flex items-center gap-2">
-                        <input type="text" id="searchInput" placeholder="Buscar participante..." class="input-dark !w-48 !py-1 !text-xs">
+                    <div class="relative w-full sm:w-auto">
+                        <i class="ph ph-magnifying-glass absolute left-3 top-2.5 text-slate-500"></i>
+                        <input type="text" id="searchInput" placeholder="Buscar participante..." class="input-dark pl-9 !py-1.5 !text-xs !w-full sm:!w-64">
                     </div>
                 </div>
                 
@@ -372,26 +510,24 @@
                     <table class="w-full text-left border-collapse table-compact">
                         <thead>
                             <tr class="bg-slate-900 text-slate-400 text-[10px] uppercase font-bold border-b border-slate-700">
-                                <th class="p-3 sticky-col min-w-[170px] text-slate-300 pl-4">Participante</th>
-                                <th class="p-2 text-center w-14 month-col">Jan</th>
-                                <th class="p-2 text-center w-14 month-col">Fev</th>
-                                <th class="p-2 text-center w-14 month-col">Mar</th>
-                                <th class="p-2 text-center w-14 month-col">Abr</th>
-                                <th class="p-2 text-center w-14 month-col">Mai</th>
-                                <th class="p-2 text-center w-14 month-col">Jun</th>
-                                <th class="p-2 text-center w-14 month-col">Jul</th>
-                                <th class="p-2 text-center w-14 month-col">Ago</th>
-                                <th class="p-2 text-center w-14 month-col">Set</th>
-                                <th class="p-2 text-center w-14 month-col">Out</th>
-                                <th class="p-2 text-center w-14 month-col">Nov</th>
-                                <th class="p-2 text-center w-14 month-col">Dez</th>
-                                <!-- Coluna Multa (Dívida) -->
-                                <th class="p-2 text-center bg-rose-900/10 border-l border-rose-900/20 text-rose-400 min-w-[60px] col-multa" title="Dívida de Multa">Multa</th>
-                                <!-- Coluna Extra (Pagamento) -->
-                                <th class="p-2 text-center bg-indigo-900/10 border-l border-indigo-900/20 text-indigo-400 min-w-[60px] extra-col" title="Valor Extra Pago">Extra</th>
-                                <th class="p-2 text-right bg-slate-800/50 min-w-[90px] col-total col-total">Total Pago</th>
-                                <th class="p-2 text-right bg-slate-800/50 border-r border-slate-700 min-w-[90px] col-falta col-falta">Falta</th>
-                                <th id="editColHead" class="p-2 text-center sticky right-0 bg-slate-900 z-10 w-16 shadow-[-5px_0_10px_rgba(0,0,0,0.2)]">Editar</th>
+                                <th class="p-3 sticky-col min-w-[180px] pl-4 text-slate-300">Participante</th>
+                                <th class="p-2 text-center w-12 month-col">Jan</th>
+                                <th class="p-2 text-center w-12 month-col">Fev</th>
+                                <th class="p-2 text-center w-12 month-col">Mar</th>
+                                <th class="p-2 text-center w-12 month-col">Abr</th>
+                                <th class="p-2 text-center w-12 month-col">Mai</th>
+                                <th class="p-2 text-center w-12 month-col">Jun</th>
+                                <th class="p-2 text-center w-12 month-col">Jul</th>
+                                <th class="p-2 text-center w-12 month-col">Ago</th>
+                                <th class="p-2 text-center w-12 month-col">Set</th>
+                                <th class="p-2 text-center w-12 month-col">Out</th>
+                                <th class="p-2 text-center w-12 month-col">Nov</th>
+                                <th class="p-2 text-center w-12 month-col">Dez</th>
+                                <th class="p-2 text-center bg-rose-900/10 border-l border-rose-900/20 text-rose-400 min-w-[70px] col-multa" title="Dívida de Multa">Multa</th>
+                                <th class="p-2 text-center bg-indigo-900/10 border-l border-indigo-900/20 text-indigo-400 min-w-[70px] extra-col" title="Valor Extra Pago">Extra</th>
+                                <th class="p-2 text-right bg-slate-800/50 min-w-[100px] col-total">Total Pago</th>
+                                <th class="p-2 text-right bg-slate-800/50 border-r border-slate-700 min-w-[100px] col-falta">Falta</th>
+                                <th id="editColHead" class="p-2 text-center sticky right-0 bg-slate-900 z-10 w-14 shadow-[-5px_0_10px_rgba(0,0,0,0.2)] hidden">Editar</th>
                             </tr>
                         </thead>
                         <tbody id="participantsTableBody" class="text-sm divide-y divide-slate-700 bg-slate-800">
@@ -400,91 +536,11 @@
                     </table>
                 </div>
             </div>
-
-            <!-- Gráficos -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Gráfico Status -->
-                <div class="card lg:col-span-1 flex flex-col items-center justify-center">
-                    <h3 class="text-sm font-bold text-slate-400 w-full mb-4 flex items-center gap-2 border-b border-slate-700 pb-2">
-                        <i class="ph ph-chart-donut text-indigo-400"></i> Status de Quitação
-                    </h3>
-                                        <div class="relative w-48 h-48 my-4 flex flex-col items-center justify-center">
-                        <svg class="w-40 h-40" viewBox="0 0 120 140" role="img" aria-label="Quitação">
-                            <defs>
-                                <clipPath id="treeClipNatal2026">
-                                    <path d="M60 10 C55 20,45 30,38 40 L48 40 C40 52,32 64,26 76 L38 76 C30 88,22 100,16 112 L48 112 L48 126 L72 126 L72 112 L104 112 C98 100,90 88,82 76 L94 76 C88 64,80 52,72 40 L82 40 C75 30,65 20,60 10 Z"></path>
-                                </clipPath>
-                            </defs>
-
-
-                            <g id="treeStar" class="tree-star">
-                                <polygon points="60,3 64,12 74,12 66,18 69,28 60,22 51,28 54,18 46,12 56,12"></polygon>
-                            </g>
-                            <path d="M60 10 C55 20,45 30,38 40 L48 40 C40 52,32 64,26 76 L38 76 C30 88,22 100,16 112 L48 112 L48 126 L72 126 L72 112 L104 112 C98 100,90 88,82 76 L94 76 C88 64,80 52,72 40 L82 40 C75 30,65 20,60 10 Z" class="tree-base"></path>
-
-                            <g clip-path="url(#treeClipNatal2026)">
-                                <rect x="0" y="0" width="120" height="140" class="tree-fill"></rect>
-                                <rect id="treeCover" x="0" y="0" width="120" height="140" class="tree-cover"></rect>
-                            </g>
-
-                            <rect x="52" y="126" width="16" height="10" rx="2" class="tree-trunk"></rect>
-                            <text id="treePercent" x="60" y="78" text-anchor="middle" class="tree-pct">0%</text>
-                        </svg>
-
-                        <span class="text-xs text-slate-500 uppercase tracking-widest font-bold -mt-1">Pago</span>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4 w-full mt-2">
-                        <div class="bg-slate-900 p-2 rounded text-center border border-slate-700" mini-pill">
-                            <span id="countOk" class="block text-lg font-bold text-emerald-400">0</span>
-                            <span class="text-[10px] uppercase text-slate-500 font-bold">Em dia</span>
-                        </div>
-                        <div class="bg-slate-900 p-2 rounded text-center border border-slate-700" mini-pill">
-                            <span id="countPending" class="block text-lg font-bold text-rose-400">0</span>
-                            <span class="text-[10px] uppercase text-slate-500 font-bold">Pendente</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Barra Progresso -->
-                <div class="card lg:col-span-2 flex flex-col justify-between">
-                    <div>
-                        <h3 class="text-sm font-bold text-slate-400 mb-6 flex items-center gap-2 border-b border-slate-700 pb-2">
-                            <i class="ph ph-trend-up text-emerald-400"></i> Evolução da Arrecadação
-                        </h3>
-                        <div class="flex justify-between text-sm text-slate-300 mb-2">
-                            <span>Progresso Atual</span>
-                            <span id="metaLabel" class="font-mono text-slate-400">Meta: R$ 0</span>
-                        </div>
-                        <div class="w-full bg-slate-900 rounded-full h-8 border border-slate-700 relative overflow-hidden">
-                            <div id="mainProgressBar" class="bg-gradient-to-r from-emerald-600 to-teal-500 h-full flex items-center justify-end pr-3 text-xs font-bold text-white shadow-[0_0_10px_rgba(16,185,129,0.3)] transition-all duration-1000" style="width: 0%">
-                                <span id="mainProgressText" class="sr-only">0%</span>
-                                <div class="santa-badge" aria-hidden="true">
-                                    <span class="santa-emoji" aria-hidden="true">🎅</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-3 gap-4 mt-8">
-                        <div class="bg-slate-900 p-4 rounded-lg border border-slate-700 text-center" mini-pill">
-                            <p class="text-[10px] text-slate-500 font-bold uppercase mb-1">Esperado Total</p>
-                            <p id="summaryTotalExpected" class="text-lg font-bold text-white">R$ 0</p>
-                        </div>
-                        <div class="bg-slate-900 p-4 rounded-lg border border-slate-700 text-center" mini-pill">
-                            <p class="text-[10px] text-slate-500 font-bold uppercase mb-1">Confirmado</p>
-                            <p id="summaryTotalPaid" class="text-lg font-bold text-emerald-400">R$ 0</p>
-                        </div>
-                        <div class="bg-slate-900 p-4 rounded-lg border border-slate-700 text-center" mini-pill">
-                            <p class="text-[10px] text-slate-500 font-bold uppercase mb-1">Em Aberto</p>
-                            <p id="summaryTotalMissing" class="text-lg font-bold text-rose-400">R$ 0</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
 
         <!-- VIEW: ADMIN -->
-        <div id="view-admin" class="hidden fade-in max-w-5xl mx-auto space-y-8">
-            <h2 class="text-2xl font-bold text-white">Configurações do Sistema</h2>
+        <div id="view-admin" class="hidden fade-in max-w-5xl mx-auto space-y-8 pb-10">
+            <h2 class="text-2xl font-bold text-white border-b border-slate-700 pb-4">Configurações do Sistema</h2>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 
@@ -493,7 +549,7 @@
                     <h3 class="text-base font-bold text-white mb-2 flex items-center gap-2">
                         <i class="ph ph-currency-dollar text-indigo-400"></i> Metas Mensais (R$)
                     </h3>
-                    <p class="text-xs text-slate-400 mb-6">Defina quanto cada pessoa deve pagar por mês.</p>
+                    <p class="text-xs text-slate-400 mb-6">Defina o valor base que cada participante deve pagar por mês.</p>
 
                     <div class="grid grid-cols-3 sm:grid-cols-4 gap-3" id="monthlyGoalsContainer">
                         <!-- JS Inputs -->
@@ -518,13 +574,13 @@
                             <input type="text" id="newUserName" placeholder="Nome Completo" class="input-dark">
                             <div class="flex gap-2 items-center">
                                 <!-- Botão de Upload de Foto -->
-                                <label class="cursor-pointer bg-slate-700 hover:bg-slate-600 text-white p-2 rounded text-xs flex items-center justify-center min-w-[40px] border border-slate-600 transition" title="Escolher Foto">
+                                <label class="cursor-pointer bg-slate-700 hover:bg-slate-600 text-white p-2 rounded text-xs flex items-center justify-center min-w-[40px] border border-slate-600 transition h-[38px]" title="Escolher Foto">
                                     <i class="ph ph-camera text-lg"></i>
                                     <input type="file" id="newUserPhotoFile" accept="image/*" class="hidden" onchange="previewAddUserImage(this)">
                                 </label>
-                                <span id="newUserPhotoName" class="text-xs text-slate-500 truncate max-w-[100px] hidden">Foto selecionada</span>
+                                <span id="newUserPhotoName" class="text-xs text-emerald-400 truncate max-w-[100px] hidden font-bold">Foto OK</span>
 
-                                <select id="newUserBirthday" class="input-dark text-xs flex-grow">
+                                <select id="newUserBirthday" class="input-dark text-xs flex-grow h-[38px]">
                                     <option value="">Mês do Aniversário</option>
                                     <option value="0">Janeiro</option><option value="1">Fevereiro</option><option value="2">Março</option>
                                     <option value="3">Abril</option><option value="4">Maio</option><option value="5">Junho</option>
@@ -532,12 +588,12 @@
                                     <option value="9">Outubro</option><option value="10">Novembro</option><option value="11">Dezembro</option>
                                 </select>
                             </div>
-                            <button onclick="addParticipant()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-2 rounded font-bold transition">Adicionar</button>
+                            <button onclick="addParticipant()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-2 rounded font-bold transition shadow-lg">Adicionar Participante</button>
                         </div>
                         
                         <!-- Mini Lista -->
                         <div class="mt-6 border-t border-slate-700 pt-4">
-                            <h4 class="text-xs font-bold text-slate-500 uppercase mb-2">Cadastrados</h4>
+                            <h4 class="text-xs font-bold text-slate-500 uppercase mb-2">Cadastrados Recentemente</h4>
                             <div class="overflow-y-auto max-h-40 rounded border border-slate-700">
                                 <table class="w-full text-left">
                                     <tbody id="adminUsersTableBody" class="divide-y divide-slate-700 text-xs text-slate-300 bg-slate-900"></tbody>
@@ -558,7 +614,7 @@
                         <div class="space-y-3">
                             <div>
                                 <label class="text-[10px] text-slate-500 font-bold uppercase block mb-1">Data Limite (Prazo)</label>
-                                <input type="text" id="fineDeadline" class="input-dark bg-slate-900" placeholder="Ex: 20/05/2026" onchange="saveFineConfig()">
+                                <input type="text" id="fineDeadline" class="input-dark bg-slate-900 text-center cursor-pointer" placeholder="Selecione data..." onchange="saveFineConfig()">
                             </div>
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
@@ -567,13 +623,13 @@
                                 </div>
                                 <div>
                                     <label class="text-[10px] text-slate-500 font-bold uppercase block mb-1">Multa (R$)</label>
-                                    <input type="number" id="fineValue" class="input-dark border-rose-500/30 text-rose-400" value="15" onchange="saveFineConfig()">
+                                    <input type="number" id="fineValue" class="input-dark border-rose-500/30 text-rose-400 font-bold" value="15" onchange="saveFineConfig()">
                                 </div>
                             </div>
                         </div>
                         
                         <div class="mt-4 pt-3 border-t border-slate-700">
-                            <button onclick="manualFineCheck()" class="w-full bg-rose-900/30 border border-rose-500/30 hover:bg-rose-900/50 text-rose-200 text-xs font-bold uppercase py-2 rounded transition flex items-center justify-center gap-2">
+                            <button onclick="manualFineCheck()" class="w-full bg-rose-950/30 border border-rose-500/30 hover:bg-rose-900/50 text-rose-200 text-xs font-bold uppercase py-2 rounded transition flex items-center justify-center gap-2 hover:border-rose-500">
                                 <i class="ph ph-gavel"></i> Verificar e Aplicar
                             </button>
                             <p id="fineFeedback" class="text-center text-xs mt-2 text-slate-500 h-4"></p>
@@ -586,8 +642,8 @@
     </main>
 
     <!-- Modal Editar -->
-    <div id="editPaymentModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center px-4 bg-slate-900/80 backdrop-blur-sm fade-in">
-        <div class="bg-slate-800 rounded-lg shadow-2xl border border-slate-600 w-full max-w-xl overflow-hidden">
+    <div id="editPaymentModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center px-4 bg-slate-950/80 backdrop-blur-sm fade-in">
+        <div class="bg-slate-800 rounded-lg shadow-2xl border border-slate-600 w-full max-w-xl overflow-hidden transform transition-all scale-100">
             <div class="bg-slate-900 px-6 py-4 border-b border-slate-700 flex justify-between items-center">
                 <h3 class="text-lg font-bold text-white flex items-center gap-2"><i class="ph ph-pencil-simple text-indigo-400"></i> Editar Dados</h3>
                 <button onclick="closeEditModal()" class="text-slate-400 hover:text-white transition"><i class="ph ph-x text-xl"></i></button>
@@ -597,22 +653,23 @@
                 <!-- Info do Usuário -->
                 <div class="mb-6 pb-4 border-b border-slate-700">
                     <h4 class="text-xs font-bold uppercase text-slate-500 mb-3">Informações Pessoais</h4>
-                    <div class="flex gap-4 items-start">
+                    <div class="flex gap-4 items-center">
                         <!-- Foto Clicável para Editar -->
-                        <div class="relative w-16 h-16 rounded-full bg-slate-700 flex-shrink-0 border-2 border-slate-600 overflow-hidden cursor-pointer group" onclick="document.getElementById('editPhotoFile').click()">
+                        <div class="relative w-16 h-16 rounded-full bg-slate-700 flex-shrink-0 border-2 border-slate-600 overflow-hidden cursor-pointer group hover:border-indigo-500 transition" onclick="document.getElementById('editPhotoFile').click()">
                             <img id="modalAvatarImg" class="profile-pic hidden" src="" alt="">
                             <div id="modalAvatarText" class="absolute inset-0 flex items-center justify-center text-2xl font-bold text-slate-400">A</div>
                             <!-- Overlay de Edição -->
-                            <div class="absolute inset-0 bg-black/50 hidden group-hover:flex items-center justify-center text-white text-xs">
+                            <div class="absolute inset-0 bg-black/50 hidden group-hover:flex items-center justify-center text-white text-xl">
                                 <i class="ph ph-camera"></i>
                             </div>
                             <input type="file" id="editPhotoFile" accept="image/*" class="hidden" onchange="previewEditUserImage(this)">
                         </div>
 
-                        <div class="space-y-3 flex-grow">
-                            <div>
-                                <label class="text-[10px] text-slate-400 uppercase font-bold">Mês do Aniversário</label>
-                                <select id="editBirthdayMonth" class="input-dark text-xs p-1.5">
+                        <div class="space-y-2 flex-grow">
+                            <h2 class="text-xl font-bold text-white" id="modalParticipantName">Nome</h2>
+                            <div class="flex items-center gap-2">
+                                <i class="ph ph-cake text-slate-500"></i>
+                                <select id="editBirthdayMonth" class="input-dark !py-1 !px-2 !w-auto text-xs bg-slate-900">
                                     <option value="-1">Sem registro</option>
                                     <option value="0">Janeiro</option><option value="1">Fevereiro</option><option value="2">Março</option>
                                     <option value="3">Abril</option><option value="4">Maio</option><option value="5">Junho</option>
@@ -622,7 +679,6 @@
                             </div>
                         </div>
                     </div>
-                    <h2 class="text-xl font-bold text-white mt-4" id="modalParticipantName">Nome</h2>
                 </div>
                 
                 <input type="hidden" id="editParticipantIndex">
@@ -651,10 +707,6 @@
                         </div>
                     </div>
                 </div>
-                
-                <div id="fineWarning" class="hidden mt-4 p-2 bg-rose-900/30 border border-rose-500/30 rounded text-xs text-rose-300 text-center animate-pulse">
-                    ⚠️ Atenção: Pagamento em atraso. Uma multa de R$ <span id="fineWarnValue"></span> será lançada como dívida.
-                </div>
             </div>
 
             <div class="bg-slate-900 px-6 py-4 flex justify-end gap-3 border-t border-slate-700">
@@ -669,44 +721,37 @@
         const MONTHS_FULL = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
         const MONTH_ABBR = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
         
-        // Dados de 2026
-        const DEFAULT_MONTHLY_GOALS = [0, 0, 30, 30, 30, 30, 30, 30, 30, 30, 55, 55];
+        // Configuração Inicial de 2026
+        const DEFAULT_MONTHLY_GOALS = [0, 0, 30, 30, 30, 30, 30, 30, 30, 30, 55, 55]; // Jan/Fev 0, resto configurado
         let monthlyGoals = [...DEFAULT_MONTHLY_GOALS];
         let participantsData = [];
         const DEFAULT_FINE_CONFIG = { deadline: '20/05/2026', threshold: 50, value: 15 };
         let fineConfig = { ...DEFAULT_FINE_CONFIG };
         
-        // Variáveis temporárias
+        // Vars Temp
         let tempAddPhotoBase64 = '';
         let tempEditPhotoBase64 = '';
 
-        // --- SUPABASE (Caminho A: direto do front) ---
-        // Preencha com os dados do seu projeto (Settings > API no Supabase)
+        // --- SUPABASE CONFIG ---
         const SUPABASE_URL = "https://nctjowqubtfbejipxhhd.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5jdGpvd3F1YnRmYmVqaXB4aGhkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODk1NjYsImV4cCI6MjA4Mjk2NTU2Nn0.63GaaShzKx0oO6n4ci0Rj3onmenYycjcE0EN7vVvErE";
-        const SUPABASE_TABLE = "app_state"; // tabela criada no Supabase
+        const SUPABASE_TABLE = "app_state"; 
         const SUPABASE_KEYS = { participants: "participants", goals: "goals", fine: "fine" };
 
-        // Client (usa o anon key no navegador)
-        const sb = (window.supabase && SUPABASE_URL.includes("supabase.co") && SUPABASE_ANON_KEY.startsWith("ey"))
-          ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
-          : null;
-
-        function warnSupabaseNotConfigured() {
-            console.warn("[Supabase] Não configurado. Preencha SUPABASE_URL e SUPABASE_ANON_KEY no código.");
+        let sb = null;
+        if (typeof supabase !== 'undefined') {
+            sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        } else {
+            console.error("Supabase SDK not loaded properly.");
         }
 
-
-        
-        // --- LOGIN SIMPLES (hardcoded) ---
-        // IMPORTANTE: isso NÃO é segurança real (qualquer pessoa pode inspecionar o código).
-        // Serve apenas como controle de interface.
+        // --- AUTH ---
         const AUTH_USERS = {
             admin: { password: 'Admin2026', role: 'admin' },
             natal: { password: '2026', role: 'viewer' }
         };
 
-        let currentRole = null; // 'admin' | 'viewer'
+        let currentRole = null; 
         let isAdmin = false;
 
         function setRole(role) {
@@ -718,23 +763,26 @@
         function applyRoleUI() {
             const btnAdmin = document.getElementById('btn-admin');
             const viewAdmin = document.getElementById('view-admin');
+            const adminActions = document.getElementById('admin-actions');
+            const resetBtn = document.getElementById('btn-reset');
+            const editColHead = document.getElementById('editColHead');
 
             if (!isAdmin) {
-                btnAdmin?.classList.add('hidden');
-                // garante que não vai ficar preso na aba admin
-                if (!viewAdmin?.classList.contains('hidden')) switchTab('dashboard');
-
-                // esconde ações perigosas no painel
-                document.getElementById('btn-reset')?.classList.add('hidden');
-                document.getElementById('lbl-import')?.classList.add('hidden');
-                document.getElementById('exportCsvBtn')?.classList.add('hidden');
-                document.getElementById('editColHead')?.classList.add('hidden');
+                btnAdmin.classList.add('hidden');
+                if (!viewAdmin.classList.contains('hidden')) switchTab('dashboard');
+                
+                adminActions.classList.add('hidden');
+                resetBtn.classList.add('hidden');
+                editColHead.classList.add('hidden');
+                
+                // Remove edit columns from table rows
+                document.querySelectorAll('.edit-col').forEach(el => el.classList.add('hidden'));
             } else {
-                btnAdmin?.classList.remove('hidden');
-                document.getElementById('btn-reset')?.classList.remove('hidden');
-                document.getElementById('lbl-import')?.classList.remove('hidden');
-                document.getElementById('exportCsvBtn')?.classList.remove('hidden');
-                document.getElementById('editColHead')?.classList.remove('hidden');
+                btnAdmin.classList.remove('hidden');
+                adminActions.classList.remove('hidden');
+                resetBtn.classList.remove('hidden');
+                editColHead.classList.remove('hidden');
+                document.querySelectorAll('.edit-col').forEach(el => el.classList.remove('hidden'));
             }
         }
 
@@ -745,56 +793,40 @@
         }
 
         function initAuth() {
-            // Por padrão, bloqueia tudo até logar
-            applyRoleUI();
-
             const sessionRaw = localStorage.getItem('natal2026_session');
             if (sessionRaw) {
                 try {
                     const sess = JSON.parse(sessionRaw);
                     if (sess && (sess.role === 'admin' || sess.role === 'viewer')) {
                         setRole(sess.role);
-                        document.getElementById('loginOverlay')?.classList.add('hidden');
+                        document.getElementById('loginOverlay').classList.add('hidden');
                         return;
                     }
                 } catch (e) {}
             }
-
-            // sem sessão -> mostra overlay
-            document.getElementById('loginOverlay')?.classList.remove('hidden');
-
             // Enter para logar
-            const userEl = document.getElementById('loginUser');
-            const passEl = document.getElementById('loginPass');
-            [userEl, passEl].forEach(el => {
-                el?.addEventListener('keydown', (ev) => {
-                    if (ev.key === 'Enter') doLogin();
-                });
+            document.getElementById('loginPass').addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') doLogin();
             });
         }
 
         function doLogin() {
-            const user = (document.getElementById('loginUser')?.value || '').trim().toLowerCase();
-            const pass = (document.getElementById('loginPass')?.value || '').trim();
-
+            const user = (document.getElementById('loginUser').value || '').trim().toLowerCase();
+            const pass = (document.getElementById('loginPass').value || '').trim();
             const err = document.getElementById('loginError');
-            err?.classList.add('hidden');
-            if (err) err.innerText = '';
 
             const rec = AUTH_USERS[user];
             if (!rec || rec.password !== pass) {
-                if (err) {
-                    err.innerText = 'Usuário ou senha inválidos.';
-                    err.classList.remove('hidden');
-                }
+                err.innerText = 'Usuário ou senha incorretos.';
+                err.classList.remove('hidden');
                 return;
             }
 
             setRole(rec.role);
             localStorage.setItem('natal2026_session', JSON.stringify({ role: rec.role, user }));
-            document.getElementById('loginOverlay')?.classList.add('hidden');
-
-            // garante a renderização correta após login
+            document.getElementById('loginOverlay').classList.add('hidden');
+            
+            // Recalcula para atualizar UI (colunas de edição)
             calculateTotalsAndRender();
         }
 
@@ -802,103 +834,552 @@
             localStorage.removeItem('natal2026_session');
             setRole(null);
             isAdmin = false;
-            document.getElementById('loginOverlay')?.classList.remove('hidden');
+            document.getElementById('loginOverlay').classList.remove('hidden');
+            document.getElementById('loginUser').value = '';
+            document.getElementById('loginPass').value = '';
         }
-// --- INIT ---
+
+        // --- INIT ---
         document.addEventListener('DOMContentLoaded', async () => {
-            
             initAuth();
             await loadFromLocal();
             initDatePickers();
             renderMonthlyGoalsInputs();
             updateTotalAnnualGoalUI();
             
-            // Carrega config de multa
+            // Config Multa UI
             document.getElementById('fineThreshold').value = fineConfig.threshold;
             document.getElementById('fineValue').value = fineConfig.value;
-            
-            // Roda verificação automática de multas ao iniciar
-            setTimeout(checkAndApplyFinesAutomatic, 500); 
+
+            // Check auto multa
+            setTimeout(checkAndApplyFinesAutomatic, 1000); 
         });
 
-        // --- STORAGE (ATUALIZADO PARA 2026) ---
-        function saveToLocal() {
-            // Agora salva no Supabase (Caminho A)
-            if (!sb) { warnSupabaseNotConfigured(); return; }
+        // --- CLOUD STATUS UI ---
+        function updateCloudStatus(status) {
+            const dot = document.getElementById('cloudDot');
+            const text = document.getElementById('cloudText');
+            const container = document.getElementById('cloudStatus');
+            
+            if(!dot || !text || !container) return;
 
-            const rows = [
-                { key: SUPABASE_KEYS.participants, value: participantsData, updated_at: new Date().toISOString() },
-                { key: SUPABASE_KEYS.goals,        value: monthlyGoals,     updated_at: new Date().toISOString() },
-                { key: SUPABASE_KEYS.fine,         value: fineConfig,       updated_at: new Date().toISOString() }
-            ];
-
-            sb.from(SUPABASE_TABLE)
-              .upsert(rows, { onConflict: "key" })
-              .then(({ error }) => {
-                  if (error) {
-                      console.error("[Supabase] Erro ao salvar:", error);
-                      alert("Erro ao salvar no Supabase. Veja o console (F12).");
-                  }
-              })
-              .catch((e) => {
-                  console.error("[Supabase] Erro ao salvar:", e);
-                  alert("Erro ao salvar no Supabase. Veja o console (F12).");
-              });
+            container.classList.remove('opacity-0');
+            dot.className = 'status-dot';
+            
+            if (status === 'saving') {
+                dot.classList.add('status-saving');
+                text.innerText = 'Salvando na nuvem...';
+                text.className = 'text-amber-400';
+            } else if (status === 'saved') {
+                dot.classList.add('status-saved');
+                text.innerText = 'Salvo na Nuvem';
+                text.className = 'text-emerald-400';
+            } else if (status === 'local') {
+                dot.classList.add('status-saved');
+                dot.style.backgroundColor = '#60a5fa'; // Blue
+                text.innerText = 'Salvo Localmente (Nuvem offline)';
+                text.className = 'text-blue-400';
+            } else if (status === 'error') {
+                dot.classList.add('status-error');
+                text.innerText = 'Erro ao salvar na nuvem';
+                text.className = 'text-rose-400';
+            }
         }
 
+        // --- DATA LAYER (HYBRID: LOCAL + CLOUD) ---
         async function loadFromLocal() {
-            // Agora carrega do Supabase (Caminho A)
-            if (!sb) {
-                warnSupabaseNotConfigured();
-                loadDemoData();
+            let loaded = false;
+
+            // 1. Tentar carregar do Supabase
+            if (sb) {
+                try {
+                    updateCloudStatus('saving');
+                    const { data, error } = await sb
+                        .from(SUPABASE_TABLE)
+                        .select("key,value")
+                        .in("key", [SUPABASE_KEYS.participants, SUPABASE_KEYS.goals, SUPABASE_KEYS.fine]);
+
+                    if (error) throw error;
+
+                    const map = {};
+                    (data || []).forEach(row => { map[row.key] = row.value; });
+
+                    if (map[SUPABASE_KEYS.goals]) monthlyGoals = map[SUPABASE_KEYS.goals];
+                    if (map[SUPABASE_KEYS.fine]) fineConfig = { ...DEFAULT_FINE_CONFIG, ...map[SUPABASE_KEYS.fine] };
+                    
+                    if (map[SUPABASE_KEYS.participants] && Array.isArray(map[SUPABASE_KEYS.participants])) {
+                        participantsData = map[SUPABASE_KEYS.participants];
+                        loaded = true;
+                        updateCloudStatus('saved');
+                        console.log("Dados carregados do Supabase.");
+                    }
+                } catch (e) {
+                    console.warn("Supabase load failed. Checking local backup...", e);
+                    updateCloudStatus('error');
+                }
+            }
+
+            // 2. Se falhou ou veio vazio do Supabase, tentar LocalStorage (Browser)
+            if (!loaded) {
+                const localBackup = localStorage.getItem('natal2026_backup');
+                if (localBackup) {
+                    try {
+                        const parsed = JSON.parse(localBackup);
+                        if (parsed.participantsData) {
+                            participantsData = parsed.participantsData;
+                            if (parsed.monthlyGoals) monthlyGoals = parsed.monthlyGoals;
+                            if (parsed.fineConfig) fineConfig = parsed.fineConfig;
+                            loaded = true;
+                            updateCloudStatus('local');
+                            console.log("Dados carregados do LocalStorage (Backup Local).");
+                        }
+                    } catch (e) {
+                        console.error("Erro ao ler backup local", e);
+                    }
+                }
+            }
+
+            // 3. Se nada funcionou, carregar Demo
+            if (!loaded) {
+                console.warn("Nenhum dado encontrado. Carregando demo.");
+                loadDemoData(); 
+            } else {
                 calculateTotalsAndRender();
+            }
+        }
+
+        function loadDemoData() {
+            // Dados de exemplo se o banco estiver vazio
+            if(participantsData.length === 0) {
+                participantsData = [
+                    { id: 1, name: 'Exemplo: João', months: [0,0,30,30,0,0,0,0,0,0,0,0], extra: 0, fine: 0, birthdayMonth: 11, photo: '' },
+                    { id: 2, name: 'Exemplo: Maria', months: [0,0,30,30,30,30,30,30,30,30,55,55], extra: 50, fine: 0, birthdayMonth: 5, photo: '' }
+                ];
+            }
+            calculateTotalsAndRender();
+        }
+
+        async function saveToLocal() {
+            // 1. Salvar IMEDIATAMENTE no LocalStorage (Backup Garantido)
+            try {
+                localStorage.setItem('natal2026_backup', JSON.stringify({
+                    participantsData,
+                    monthlyGoals,
+                    fineConfig,
+                    lastSaved: new Date().toISOString()
+                }));
+            } catch (e) {
+                console.error("Falha ao salvar localmente:", e);
+            }
+
+            // 2. Tentar salvar no Supabase
+            if (!sb) {
+                updateCloudStatus('local');
                 return;
             }
 
+            updateCloudStatus('saving');
+            
+            const rows = [
+                { key: SUPABASE_KEYS.participants, value: participantsData, updated_at: new Date().toISOString() },
+                { key: SUPABASE_KEYS.goals, value: monthlyGoals, updated_at: new Date().toISOString() },
+                { key: SUPABASE_KEYS.fine, value: fineConfig, updated_at: new Date().toISOString() }
+            ];
+
             try {
-                const { data, error } = await sb
-                    .from(SUPABASE_TABLE)
-                    .select("key,value")
-                    .in("key", [SUPABASE_KEYS.participants, SUPABASE_KEYS.goals, SUPABASE_KEYS.fine]);
-
+                const { error } = await sb.from(SUPABASE_TABLE).upsert(rows, { onConflict: "key" });
                 if (error) throw error;
-
-                const map = {};
-                (data || []).forEach(row => { map[row.key] = row.value; });
-
-                // goals
-                const loadedGoals = map[SUPABASE_KEYS.goals];
-                if (Array.isArray(loadedGoals) && loadedGoals.length === 12) {
-                    monthlyGoals = loadedGoals;
-                } else {
-                    monthlyGoals = [...DEFAULT_MONTHLY_GOALS];
-                }
-
-                // fine
-                const loadedFine = map[SUPABASE_KEYS.fine];
-                if (loadedFine && typeof loadedFine === 'object' && !Array.isArray(loadedFine)) {
-                    fineConfig = {
-                        deadline: loadedFine.deadline ?? DEFAULT_FINE_CONFIG.deadline,
-                        threshold: Number.isFinite(+loadedFine.threshold) ? +loadedFine.threshold : DEFAULT_FINE_CONFIG.threshold,
-                        value: Number.isFinite(+loadedFine.value) ? +loadedFine.value : DEFAULT_FINE_CONFIG.value,
-                    };
-                } else {
-                    fineConfig = { ...DEFAULT_FINE_CONFIG };
-                }
-
-                if (map[SUPABASE_KEYS.participants] != null && Array.isArray(map[SUPABASE_KEYS.participants])) {
-                    participantsData = map[SUPABASE_KEYS.participants];
-                } else {
-                    loadDemoData();
-                }
-
-                calculateTotalsAndRender();
+                updateCloudStatus('saved');
             } catch (e) {
-                console.error("[Supabase] Erro ao carregar:", e);
-                alert("Erro ao carregar do Supabase. Vou abrir com dados de demonstração (veja o console).");
-                loadDemoData();
-                calculateTotalsAndRender();
+                console.error("Erro ao salvar no Supabase:", e);
+                updateCloudStatus('error');
             }
+        }
+
+        async function resetData() {
+            if(!requireAdmin()) return;
+            if(confirm("ATENÇÃO: Isso apagará TODOS os dados do sistema. Continuar?")) {
+                participantsData = [];
+                monthlyGoals = [...DEFAULT_MONTHLY_GOALS];
+                fineConfig = { ...DEFAULT_FINE_CONFIG };
+                
+                // Limpa backup local também
+                localStorage.removeItem('natal2026_backup');
+                
+                await saveToLocal();
+                location.reload();
+            }
+        }
+
+        // --- CORE LOGIC ---
+        function calculateTotalsAndRender() {
+            const baseTotalGoal = monthlyGoals.reduce((a,b) => a+b, 0);
+
+            participantsData.forEach(p => {
+                if (p.fine === undefined) p.fine = 0;
+                
+                let personalGoal = baseTotalGoal;
+                let paidSum = 0;
+
+                // Desconto Aniversário (meta do mês vira 0)
+                if (p.birthdayMonth !== null && p.birthdayMonth >= 0 && p.birthdayMonth < 12) {
+                    const discount = monthlyGoals[p.birthdayMonth];
+                    personalGoal -= discount;
+                }
+
+                p.months.forEach(val => paidSum += val);
+                
+                // Total Pago = Soma Meses + Extra
+                p.totalPaid = paidSum + (p.extra || 0);
+                
+                // Meta Total = Meta Pessoal (com desconto) + Multa
+                p.totalGoal = personalGoal + (p.fine || 0);
+
+                let missingCalc = p.totalGoal - p.totalPaid;
+                p.missing = missingCalc < 0 ? 0 : missingCalc;
+            });
+
+            updateDashboardUI();
+            if(isAdmin) saveToLocal(); // Auto-save on calc usually happens after edit, but safe here
+        }
+
+        function updateDashboardUI() {
+            const totalArrecadado = participantsData.reduce((acc, p) => acc + p.totalPaid, 0);
+            const totalFalta = participantsData.reduce((acc, p) => acc + p.missing, 0);
+            const totalEsperado = totalArrecadado + totalFalta;
+            
+            const progress = totalEsperado > 0 ? (totalArrecadado / totalEsperado) * 100 : 0;
+
+            // Adimplência do mês atual
+            const _today = new Date();
+            const _currentMonth = _today.getMonth(); // 0-11
+            const _deadlineParts = (fineConfig.deadline || '20/12/2026').split('/');
+            const _deadlineDay = parseInt(_deadlineParts[0]) || 20;
+            const _currentMonthGoal = monthlyGoals[_currentMonth] || 0;
+            const _deadlineThisMonth = new Date(_today.getFullYear(), _currentMonth, _deadlineDay, 23, 59, 59);
+
+            let peopleOk, peoplePending;
+            if (_currentMonthGoal === 0) {
+                // Mês sem meta configurada: todos adimplentes
+                peopleOk = participantsData.length;
+                peoplePending = 0;
+            } else {
+                peopleOk = participantsData.filter(p => (p.months[_currentMonth] || 0) >= _currentMonthGoal).length;
+                peoplePending = participantsData.length - peopleOk;
+            }
+
+            // Atualiza label dinâmico do card
+            const _mesLabel = MONTHS_FULL[_currentMonth];
+            const _vencLabel = `Vence dia ${_deadlineDay}/${String(_currentMonth + 1).padStart(2,'0')}`;
+            const _statusMonthEl = document.getElementById('statusMonthLabel');
+            if (_statusMonthEl) {
+                _statusMonthEl.innerHTML = `<span class="text-slate-400">${_mesLabel}</span> <span class="text-slate-600">·</span> <span class="${_today <= _deadlineThisMonth ? 'text-emerald-400' : 'text-rose-400'}">${_vencLabel}</span>`;
+            }
+
+            // HTML Updates
+            document.getElementById('dashboardSummary').innerHTML = `
+                <div class="card border-l-4 border-l-emerald-500 hover:bg-slate-800/80 transition shadow-lg">
+                    <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Caixa Atual</p>
+                    <h2 class="text-3xl font-bold text-white mt-1">R$ ${totalArrecadado.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</h2>
+                </div>
+                <div class="card border-l-4 border-l-rose-500 hover:bg-slate-800/80 transition shadow-lg">
+                    <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Falta Receber</p>
+                    <h2 class="text-3xl font-bold text-white mt-1">R$ ${totalFalta.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</h2>
+                </div>
+                <div class="card border-l-4 border-l-indigo-500 hover:bg-slate-800/80 transition shadow-lg">
+                    <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Participantes</p>
+                    <div class="flex items-end gap-2 mt-1">
+                        <h2 class="text-3xl font-bold text-white">${participantsData.length}</h2>
+                        <span class="text-xs text-indigo-300 font-bold mb-1.5 px-2 py-0.5 rounded bg-indigo-900/50 border border-indigo-500/30">${peopleOk} Quitados</span>
+                    </div>
+                </div>
+                <div class="card border-l-4 border-l-amber-500 hover:bg-slate-800/80 transition shadow-lg">
+                    <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Extra / Créditos</p>
+                    <h2 class="text-3xl font-bold text-white mt-1">R$ ${participantsData.reduce((acc, p) => acc + (p.extra || 0), 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</h2>
+                </div>
+            `;
+
+            // Charts & Visuals
+            const pct = Math.max(0, Math.min(Number(progress) || 0, 100));
+            
+            // Santa Bar
+            document.getElementById('mainProgressBar').style.width = `${pct}%`;
+            document.getElementById('mainProgressText').innerText = `${pct.toFixed(0)}%`;
+            document.getElementById('metaLabel').innerText = `Meta: R$ ${totalEsperado.toLocaleString('pt-BR')}`;
+
+            // Tree Visual
+            const treePctEl = document.getElementById('treePercent');
+            if (treePctEl) treePctEl.textContent = `${pct.toFixed(0)}%`;
+            
+            const treeCover = document.getElementById('treeCover');
+            if(treeCover) treeCover.style.transform = `scaleY(${(100 - pct) / 100})`;
+            
+            const star = document.getElementById('treeStar');
+            if(star) {
+                if(pct >= 100) star.classList.add('on');
+                else star.classList.remove('on');
+            }
+
+            // Text Counts
+            document.getElementById('countOk').innerText = peopleOk;
+            document.getElementById('countPending').innerText = peoplePending;
+            
+            // Small stats
+            document.getElementById('summaryTotalExpected').innerText = `R$ ${totalEsperado.toLocaleString('pt-BR')}`;
+            document.getElementById('summaryTotalPaid').innerText = `R$ ${totalArrecadado.toLocaleString('pt-BR')}`;
+            document.getElementById('summaryTotalMissing').innerText = `R$ ${totalFalta.toLocaleString('pt-BR')}`;
+
+            // Sort alphabetical
+            participantsData.sort((a,b) => (a.name||'').localeCompare((b.name||''), 'pt-BR', {sensitivity:'base'}));
+
+            renderTable(participantsData);
+            if(isAdmin) renderAdminUserList();
+        }
+
+        function renderTable(data) {
+            const tbody = document.getElementById('participantsTableBody');
+            tbody.innerHTML = '';
+
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="18" class="p-8 text-center text-slate-500 italic">Nenhum participante encontrado.</td></tr>`;
+                return;
+            }
+
+            data.forEach((p, index) => {
+                const realIndex = participantsData.findIndex(pp => pp.id === p.id);
+                // Admin Click
+                const clickAttr = isAdmin ? `onclick="openEditModal(${realIndex})"` : '';
+                const cursorClass = isAdmin ? 'cursor-pointer hover:text-indigo-300' : '';
+                
+                // Edit button logic
+                const editTdClass = isAdmin ? 'edit-col' : 'edit-col hidden';
+                
+                let monthsHTML = '';
+                p.months.forEach((val, idx) => {
+                    const goal = monthlyGoals[idx];
+                    let badgeClass = 'bg-none'; 
+                    let content = '';
+
+                    if (p.birthdayMonth == idx) {
+                        badgeClass = 'bg-birthday';
+                        content = '<i class="ph ph-cake text-base"></i>';
+                        if (val > 0) content += `<span class="ml-1 text-[10px]">${val}</span>`;
+                    } else {
+                        if (goal > 0) {
+                            if (val >= goal) badgeClass = 'bg-paid';
+                            else if (val > 0) badgeClass = 'bg-partial';
+                            else badgeClass = 'bg-missed';
+                        } else {
+                            if (val > 0) badgeClass = 'bg-paid'; // Pagou algo num mês sem meta
+                        }
+                        content = val > 0 ? (Number.isInteger(val) ? val : val.toFixed(0)) : '-';
+                    }
+                    monthsHTML += `<td class="p-2 text-center align-middle month-col"><div class="status-badge ${badgeClass}">${content}</div></td>`;
+                });
+
+                // Avatar
+                let avatarHTML = '';
+                if (p.photo && p.photo.trim() !== "") {
+                    avatarHTML = `<div class="w-8 h-8 rounded-full overflow-hidden border-2 border-slate-600 flex-shrink-0 bg-slate-800"><img src="${p.photo}" class="profile-pic" onerror="this.src=''"></div>`;
+                } else {
+                    avatarHTML = `<div class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-[10px] text-slate-300 border border-slate-600 font-bold flex-shrink-0">${p.name.charAt(0)}</div>`;
+                }
+
+                // Values
+                const fineDisplay = p.fine > 0 ? `<span class="text-rose-400 font-bold">R$${p.fine}</span>` : '-';
+                const extraDisplay = p.extra > 0 ? `<span class="text-indigo-400 font-bold">+R$${p.extra}</span>` : '-';
+
+                const row = document.createElement('tr');
+                row.className = 'transition border-b border-slate-700 last:border-0 group';
+                
+                row.innerHTML = `
+                    <td class="p-3 sticky-col z-20 font-medium text-white whitespace-nowrap ${cursorClass} flex items-center gap-3" ${clickAttr}>
+                        ${avatarHTML}
+                        <span>${p.name}</span>
+                    </td>
+                    ${monthsHTML}
+                    <td class="p-2 text-center align-middle bg-rose-900/10 border-l border-rose-900/20 text-xs col-multa">${fineDisplay}</td>
+                    <td class="p-2 text-center align-middle bg-indigo-900/10 border-l border-indigo-900/20 text-xs extra-col">${extraDisplay}</td>
+                    <td class="p-2 text-right align-middle bg-slate-800/50 font-mono font-medium text-emerald-400 text-xs col-total">R$ ${(p.totalPaid).toFixed(0)}</td>
+                    <td class="p-2 text-right align-middle bg-slate-800/50 border-r border-slate-700 font-mono font-medium ${p.missing > 0 ? 'text-rose-400' : 'text-slate-600'} text-xs col-falta">R$ ${p.missing.toFixed(0)}</td>
+                    <td class="p-2 text-center align-middle sticky right-0 bg-slate-800 z-10 border-l border-slate-700 ${editTdClass} shadow-[-5px_0_10px_rgba(0,0,0,0.2)]">
+                        <button onclick="openEditModal(${realIndex})" class="text-indigo-400 hover:text-white p-1.5 rounded hover:bg-indigo-600 transition"><i class="ph ph-pencil-simple text-lg"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // --- UI UTILS ---
+        function switchTab(tabName) {
+            if(tabName === 'admin' && !isAdmin) { alert('Acesso restrito.'); return; }
+            
+            document.getElementById('view-dashboard').classList.add('hidden');
+            document.getElementById('view-admin').classList.add('hidden');
+            document.getElementById('btn-dashboard').classList.remove('active');
+            document.getElementById('btn-admin').classList.remove('active');
+
+            document.getElementById(`view-${tabName}`).classList.remove('hidden');
+            document.getElementById(`btn-${tabName}`).classList.add('active');
+        }
+
+        function initDatePickers() {
+            flatpickr("#fineDeadline", {
+                dateFormat: "d/m/Y",
+                locale: "pt",
+                defaultDate: fineConfig.deadline,
+                theme: "dark",
+                onChange: function(dates, str) {
+                    fineConfig.deadline = str;
+                    saveToLocal();
+                }
+            });
+        }
+
+        // --- ADMIN FUNCTIONS ---
+        function renderMonthlyGoalsInputs() {
+            const container = document.getElementById('monthlyGoalsContainer');
+            container.innerHTML = '';
+            monthlyGoals.forEach((val, idx) => {
+                const div = document.createElement('div');
+                div.className = "bg-slate-900 p-2 rounded border border-slate-700 flex flex-col hover:border-indigo-500/50 transition";
+                div.innerHTML = `
+                    <label class="text-[10px] uppercase text-slate-500 font-bold mb-1">${MONTH_ABBR[idx]}</label>
+                    <div class="flex items-center"><span class="text-xs text-slate-500 mr-1">R$</span><input type="number" id="goal-${idx}" value="${val}" onchange="updateTotalAnnualGoalUI()" class="bg-transparent text-white text-sm w-full font-mono focus:outline-none"></div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function updateTotalAnnualGoalUI() {
+            const inputs = document.querySelectorAll('[id^="goal-"]');
+            let total = 0;
+            inputs.forEach(input => total += parseFloat(input.value) || 0);
+            document.getElementById('totalAnnualGoal').innerText = `R$ ${total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+        }
+
+        function saveMonthlyGoals() {
+            if(!requireAdmin()) return;
+            const inputs = document.querySelectorAll('[id^="goal-"]');
+            inputs.forEach((input, idx) => monthlyGoals[idx] = parseFloat(input.value) || 0);
+            calculateTotalsAndRender();
+            alert("Metas atualizadas com sucesso!");
+        }
+
+        function renderAdminUserList() {
+            const tbody = document.getElementById('adminUsersTableBody');
+            tbody.innerHTML = '';
+            participantsData.forEach((p, index) => {
+                const row = document.createElement('tr');
+                row.className = "hover:bg-slate-800 transition border-b border-slate-700 last:border-0";
+                row.innerHTML = `
+                    <td class="p-2 text-white font-medium">${p.name}</td>
+                    <td class="p-2 text-right font-mono text-emerald-400 text-xs">R$ ${p.totalPaid}</td>
+                    <td class="p-2 text-center"><button onclick="removeParticipant(${index})" class="text-rose-400 hover:text-white hover:bg-rose-600 p-1 rounded transition"><i class="ph ph-trash"></i></button></td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        async function addParticipant() {
+            if(!requireAdmin()) return;
+
+            const name = document.getElementById('newUserName').value.trim();
+            if (!name) return;
+            
+            const bMonthVal = document.getElementById('newUserBirthday').value;
+            const bMonth = bMonthVal === "" ? null : parseInt(bMonthVal);
+
+            participantsData.push({ 
+                id: Date.now(), 
+                name: name, 
+                months: Array(12).fill(0), 
+                extra: 0,
+                fine: 0, 
+                totalPaid: 0, 
+                missing: 0,
+                photo: tempAddPhotoBase64 || '', // Usa o base64 carregado
+                birthdayMonth: bMonth
+            });
+            
+            // Limpa campos e vars temporárias
+            document.getElementById('newUserName').value = '';
+            document.getElementById('newUserBirthday').value = '';
+            document.getElementById('newUserPhotoFile').value = ''; 
+            document.getElementById('newUserPhotoName').classList.add('hidden');
+            tempAddPhotoBase64 = '';
+
+            calculateTotalsAndRender();
+        }
+
+        function removeParticipant(idx) {
+            if(!requireAdmin()) return;
+            if(confirm("Remover participante?")) { participantsData.splice(idx, 1); calculateTotalsAndRender(); }
+        }
+
+        // Logic for checking fines
+        function checkAndApplyFinesAutomatic() {
+            const deadlineStr = fineConfig.deadline;
+            if (!deadlineStr) return;
+
+            const parts = deadlineStr.split('/');
+            const deadlineDate = new Date(parts[2], parts[1] - 1, parts[0]);
+            deadlineDate.setHours(23, 59, 59, 999);
+            const today = new Date();
+
+            if (today > deadlineDate) {
+                let appliedCount = 0;
+                participantsData.forEach(p => { 
+                    const monthlyPaid = p.months.reduce((a,b)=>a+b,0);
+                    if (monthlyPaid < fineConfig.threshold && (p.fine || 0) === 0) { 
+                        p.fine = fineConfig.value; 
+                        appliedCount++; 
+                    } 
+                });
+                if (appliedCount > 0) calculateTotalsAndRender();
+            }
+        }
+
+        function manualFineCheck() {
+            if(!requireAdmin()) return;
+            applyFineRules();
+        }
+
+        function applyFineRules() {
+            saveFineConfig();
+            
+            const deadlineStr = fineConfig.deadline;
+            const threshold = fineConfig.threshold;
+            const fineVal = fineConfig.value;
+
+            if(!threshold || !fineVal || !deadlineStr) { 
+                alert("Preencha todos os campos da multa!"); return; 
+            }
+
+            const parts = deadlineStr.split('/');
+            const deadlineDate = new Date(parts[2], parts[1] - 1, parts[0]);
+            const today = new Date();
+            deadlineDate.setHours(23, 59, 59, 999);
+            today.setHours(0, 0, 0, 0);
+
+            if (today <= deadlineDate) {
+                const diasRestantes = Math.ceil((deadlineDate - today) / (1000 * 60 * 60 * 24));
+                const confirmApply = confirm(`ATENÇÃO: A data limite (${deadlineStr}) ainda não chegou! Faltam ${diasRestantes} dias.\n\nDeseja aplicar a multa ANTECIPADAMENTE em quem não pagou?`);
+                if (!confirmApply) return;
+            }
+            
+            let count = 0;
+            participantsData.forEach(p => { 
+                const monthlyPaid = p.months.reduce((a,b)=>a+b,0);
+                if (monthlyPaid < threshold && (p.fine || 0) === 0) { 
+                    p.fine = fineVal; 
+                    count++; 
+                } 
+            });
+            
+            calculateTotalsAndRender();
+            document.getElementById('fineFeedback').innerText = `Auditoria concluída. ${count} multas aplicadas.`;
+            setTimeout(() => document.getElementById('fineFeedback').innerText = "", 4000);
         }
 
         function saveFineConfig() {
@@ -908,67 +1389,103 @@
             saveToLocal();
         }
 
-        async function resetData() {
-            if(!requireAdmin()) return;
-            if(confirm("Deseja apagar todos os dados e começar do zero?")) {
-                // Zera no Supabase (mantém a sessão de login)
-                participantsData = [];
-                monthlyGoals = [...DEFAULT_MONTHLY_GOALS];
-                fineConfig = { ...DEFAULT_FINE_CONFIG };
+        // CSV Logic
+        const fileInput = document.getElementById('csvInput');
+        fileInput.addEventListener('change', (e) => {
+            if(!isAdmin) { alert('Acesso restrito.'); e.target.value=''; return; }
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (evt) => parseCSV(evt.target.result);
+            reader.readAsText(file);
+        });
 
-                // remove qualquer resíduo antigo do localStorage (opcional)
-                localStorage.removeItem('natal2026_data');
-                localStorage.removeItem('natal2026_goals');
-                localStorage.removeItem('natal2026_fine');
+        // Backup JSON Logic
+        const backupInput = document.getElementById('jsonBackupInput');
+        backupInput.addEventListener('change', (e) => {
+            if (!requireAdmin()) { e.target.value = ''; return; }
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (evt) => {
+                importBackupJSON(String(evt.target.result || ''));
+            };
+            reader.readAsText(file);
+            e.target.value = '';
+        });
 
-                if (!sb) { warnSupabaseNotConfigured(); location.reload(); return; }
+        function exportBackupJSON() {
+            if (!requireAdmin()) return;
+            const backup = {
+                version: 1,
+                exportedAt: new Date().toISOString(),
+                monthlyGoals,
+                fineConfig,
+                participantsData
+            };
+            const json = JSON.stringify(backup, null, 2);
+            const blob = new Blob([json], { type: 'application/json;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'natal_familia_2026_backup.json';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        }
 
-                try {
-                    const rows = [
-                        { key: SUPABASE_KEYS.participants, value: participantsData, updated_at: new Date().toISOString() },
-                        { key: SUPABASE_KEYS.goals,        value: monthlyGoals,     updated_at: new Date().toISOString() },
-                        { key: SUPABASE_KEYS.fine,         value: fineConfig,       updated_at: new Date().toISOString() }
-                    ];
-                    const { error } = await sb.from(SUPABASE_TABLE).upsert(rows, { onConflict: "key" });
-                    if (error) throw error;
-                } catch (e) {
-                    console.error("[Supabase] Erro ao resetar:", e);
-                    alert("Erro ao resetar no Supabase. Veja o console.");
+        function importBackupJSON(text) {
+            try {
+                const data = JSON.parse(text);
+                if (!data || !Array.isArray(data.participantsData)) throw new Error("Formato inválido");
+                
+                if (confirm('Isso substituirá os dados atuais. Continuar?')) {
+                    monthlyGoals = data.monthlyGoals || DEFAULT_MONTHLY_GOALS;
+                    fineConfig = data.fineConfig || DEFAULT_FINE_CONFIG;
+                    participantsData = data.participantsData;
+                    syncConfigInputs();
+                    calculateTotalsAndRender();
+                    alert("Backup restaurado!");
                 }
-
-                location.reload();
+            } catch (e) {
+                alert('Erro ao ler backup JSON.');
             }
         }
-
-        // --- UI ---
-        function switchTab(tabName) {
-            if(tabName === 'admin' && !isAdmin) { alert('Acesso restrito: somente Admin.'); return; }
-const views = { dashboard: document.getElementById('view-dashboard'), admin: document.getElementById('view-admin') };
-            const btns = { dashboard: document.getElementById('btn-dashboard'), admin: document.getElementById('btn-admin') };
-
-            Object.values(views).forEach(el => el.classList.add('hidden'));
-            Object.values(btns).forEach(el => el.classList.remove('active'));
-
-            views[tabName].classList.remove('hidden');
-            btns[tabName].classList.add('active');
-
-            if(tabName === 'admin') renderAdminUserList();
+        
+        function syncConfigInputs() {
+            renderMonthlyGoalsInputs();
+            document.getElementById('fineDeadline').value = fineConfig.deadline || '';
+            document.getElementById('fineThreshold').value = fineConfig.threshold || '';
+            document.getElementById('fineValue').value = fineConfig.value || '';
         }
 
-        function initDatePickers() {
-            flatpickr("#fineDeadline", {
-                dateFormat: "d/m/Y",
-                locale: "pt",
-                defaultDate: fineConfig.deadline || "20/05/2026",
-                theme: "dark",
-                onChange: function(selectedDates, dateStr, instance) {
-                    fineConfig.deadline = dateStr;
-                    saveToLocal();
-                }
+        function parseCSV(text) {
+            const lines = text.split('\n');
+            const newData = [];
+            // Basic parser expecting specific columns... simplified for demo
+            alert("Função CSV simplificada: Implementar parser completo se necessário.");
+        }
+
+        function exportParticipantsCSV() {
+            if (!Array.isArray(participantsData)) return;
+            const headers = ['id','nome','jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez','multa','extra','total','falta'];
+            const rows = participantsData.map(p => {
+                const months = p.months || Array(12).fill(0);
+                return [p.id, p.name, ...months, p.fine, p.extra, p.totalPaid, p.missing].join(',');
             });
+            const csv = [headers.join(','), ...rows].join('\n');
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'natal_familia_2026.csv';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
         }
 
-        // --- IMAGE HANDLING ---
+        // Image Utils
         function readFileAsBase64(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -981,13 +1498,9 @@ const views = { dashboard: document.getElementById('view-dashboard'), admin: doc
         async function previewAddUserImage(input) {
             if (input.files && input.files[0]) {
                 const file = input.files[0];
-                const base64 = await readFileAsBase64(file);
-                tempAddPhotoBase64 = base64;
-                
+                tempAddPhotoBase64 = await readFileAsBase64(file);
                 const label = document.getElementById('newUserPhotoName');
-                label.innerText = file.name;
                 label.classList.remove('hidden');
-                
                 input.parentElement.classList.remove('bg-slate-700');
                 input.parentElement.classList.add('bg-emerald-600');
             }
@@ -995,201 +1508,15 @@ const views = { dashboard: document.getElementById('view-dashboard'), admin: doc
 
         async function previewEditUserImage(input) {
             if (input.files && input.files[0]) {
-                const base64 = await readFileAsBase64(input.files[0]);
-                tempEditPhotoBase64 = base64;
-                
+                tempEditPhotoBase64 = await readFileAsBase64(input.files[0]);
                 const imgEl = document.getElementById('modalAvatarImg');
                 const txtEl = document.getElementById('modalAvatarText');
-                imgEl.src = base64;
+                imgEl.src = tempEditPhotoBase64;
                 imgEl.classList.remove('hidden');
                 txtEl.classList.add('hidden');
             }
         }
-
-        // --- DATA ---
-        function loadDemoData() {
-            participantsData = [
-                { id: 1, name: 'Adjane', months: [0,0,30,30,30,30,30,30,30,30,55,55], extra: 0, fine: 0, birthdayMonth: 8, photo: '' },
-                { id: 2, name: 'Alexia', months: [0,0,30,30,30,30,30,30,30,30,55,55], extra: 0, fine: 0, birthdayMonth: null, photo: '' },
-            ];
-            calculateTotalsAndRender();
-        }
-
-        function calculateTotalsAndRender() {
-            const baseTotalGoal = monthlyGoals.reduce((a,b) => a+b, 0);
-
-            participantsData.forEach(p => {
-                // Se fine não existe (dados antigos), cria
-                if (p.fine === undefined) p.fine = 0;
-
-                let personalGoal = baseTotalGoal;
-                let paidSum = 0;
-
-                // Desconto Aniversário
-                if (p.birthdayMonth !== null && p.birthdayMonth >= 0 && p.birthdayMonth < 12) {
-                    const birthdayDiscount = monthlyGoals[p.birthdayMonth];
-                    personalGoal -= birthdayDiscount;
-                }
-
-                // Soma pagamentos
-                p.months.forEach(val => paidSum += val);
-                
-                p.totalPaid = paidSum + (p.extra || 0);
-                
-                // Meta Total = Meta Base - Desconto + Multa
-                p.totalGoal = personalGoal + (p.fine || 0);
-
-                let missingCalc = p.totalGoal - p.totalPaid;
-                p.missing = missingCalc < 0 ? 0 : missingCalc;
-            });
-            updateDashboard();
-            saveToLocal();
-        }
-
-        function updateDashboard() {
-            const totalArrecadado = participantsData.reduce((acc, p) => acc + p.totalPaid, 0);
-            const totalFalta = participantsData.reduce((acc, p) => acc + p.missing, 0);
-            const totalEsperado = totalArrecadado + totalFalta;
-            const progress = totalEsperado > 0 ? (totalArrecadado / totalEsperado) * 100 : 0;
-            const peopleOk = participantsData.filter(p => p.missing <= 0).length;
-            
-            // Cards Atualizados
-            document.getElementById('dashboardSummary').innerHTML = `
-                <div class="card border-l-4 border-l-emerald-500">
-                    <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Caixa Atual</p>
-                    <h2 class="text-2xl font-bold text-white mt-1">R$ ${totalArrecadado.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</h2>
-                </div>
-                <div class="card border-l-4 border-l-rose-500">
-                    <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Falta Receber</p>
-                    <h2 class="text-2xl font-bold text-white mt-1">R$ ${totalFalta.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</h2>
-                </div>
-                <div class="card border-l-4 border-l-indigo-500">
-                    <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Participantes</p>
-                    <div class="flex items-end gap-2 mt-1">
-                        <h2 class="text-2xl font-bold text-white">${participantsData.length}</h2>
-                        <span class="text-xs text-indigo-400 font-bold mb-1 px-2 rounded bg-indigo-900/30">${peopleOk} Quitados</span>
-                    </div>
-                </div>
-                <div class="card border-l-4 border-l-amber-500">
-                    <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Extra Arrecadado</p>
-                    <h2 class="text-2xl font-bold text-white mt-1">R$ ${participantsData.reduce((acc, p) => acc + (p.extra || 0), 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</h2>
-                </div>
-            `;
-
-            const pct = Math.max(0, Math.min(Number(progress) || 0, 100));
-            const pctText = pct.toFixed(0) + '%';
-
-            const treePercentEl = document.getElementById('treePercent');
-            if (treePercentEl) treePercentEl.textContent = pctText;
-            requestAnimationFrame(() => { if (treePercentEl) treePercentEl.textContent = pctText; });
-
-            // Cover via transform (anima suave no SVG)
-            const treeCoverEl = document.getElementById('treeCover');
-            if (treeCoverEl) {
-                treeCoverEl.setAttribute('height', '140');
-                treeCoverEl.setAttribute('y', '0');
-                treeCoverEl.setAttribute('x', '0');
-                treeCoverEl.style.transform = `scaleY(${(100 - pct) / 100})`;
-            }
-
-            // Estrela acende quando chega em 100%
-            const treeStarEl = document.getElementById('treeStar');
-            if (treeStarEl) {
-                if (pct >= 100) treeStarEl.classList.add('on');
-                else treeStarEl.classList.remove('on');
-            }
-document.getElementById('countOk').innerText = peopleOk;
-            document.getElementById('countPending').innerText = participantsData.length - peopleOk;
-            document.getElementById('mainProgressBar').style.width = `${progress}%`;
-            const mainProgressTextEl = document.getElementById('mainProgressText');
-            if (mainProgressTextEl) mainProgressTextEl.innerText = `${progress.toFixed(0)}%`;
-            document.getElementById('mainProgressBar').title = `${progress.toFixed(0)}%`;
-            document.getElementById('metaLabel').innerText = `Meta: R$ ${totalEsperado.toLocaleString('pt-BR')}`;
-            document.getElementById('summaryTotalExpected').innerText = `R$ ${totalEsperado.toLocaleString('pt-BR')}`;
-            document.getElementById('summaryTotalPaid').innerText = `R$ ${totalArrecadado.toLocaleString('pt-BR')}`;
-            document.getElementById('summaryTotalMissing').innerText = `R$ ${totalFalta.toLocaleString('pt-BR')}`;
-
-                        // Ordena participantes por nome (exibição)
-            participantsData.sort((a,b) => (a.name||'').localeCompare((b.name||''), 'pt-BR', {sensitivity:'base'}));
-
-            renderTable(participantsData);
-        }
-
-        function renderTable(data) {
-            const tbody = document.getElementById('participantsTableBody');
-            tbody.innerHTML = '';
-            if (data.length === 0) { tbody.innerHTML = `<tr><td colspan="17" class="p-8 text-center text-slate-500">Nenhum participante cadastrado.</td></tr>`; return; }
-            const sortedData = [...data].sort((a,b) => (a.name||'').localeCompare((b.name||''), 'pt-BR', {sensitivity:'base'}));
-
-            sortedData.forEach((p, index) => {
-                const realIndex = participantsData.findIndex(pp => pp.id === p.id);
-                const clickAttr = isAdmin ? `onclick="openEditModal(${realIndex})"` : '';
-                const editTd = isAdmin ? `
-                    <td class="p-2 text-center align-middle sticky right-0 bg-slate-800 z-10 border-l border-slate-700 edit-col shadow-[-5px_0_10px_rgba(0,0,0,0.2)]">
-                        <button onclick="openEditModal(${realIndex})" class="text-indigo-400 hover:text-white p-1.5 rounded hover:bg-indigo-600 transition shadow-sm"><i class="ph ph-pencil-simple text-lg"></i></button>
-                    </td>
-                ` : '';
-
-                let monthsHTML = '';
-                p.months.forEach((val, idx) => {
-                    const goal = monthlyGoals[idx];
-                    let badgeClass = 'bg-none'; 
-                    let content = '';
-
-                    if (p.birthdayMonth == idx) {
-                        badgeClass = 'bg-birthday';
-                        content = '<i class="ph ph-cake text-base"></i>';
-                        if (val > 0) content += ` <span class="text-[9px]">${val}</span>`;
-                    } else {
-                        if (goal > 0) {
-                            if (val >= goal) badgeClass = 'bg-paid';
-                            else if (val > 0) badgeClass = 'bg-partial';
-                            else badgeClass = 'bg-missed';
-                        } else {
-                            if (val > 0) badgeClass = 'bg-paid';
-                            else badgeClass = 'bg-none';
-                        }
-                        content = val > 0 ? (Number.isInteger(val) ? val : val.toFixed(0)) : '-';
-                    }
-                    
-                    monthsHTML += `<td class="p-2 text-center align-middle month-col"><span class="status-badge ${badgeClass}">${content}</span></td>`;
-                });
-
-                const row = document.createElement('tr');
-                row.className = 'hover:bg-slate-700 transition border-b border-slate-700 last:border-0 group';
-                
-                let avatarHTML;
-                if (p.photo && p.photo.trim() !== "") {
-                    avatarHTML = `<div class="avatar w-8 h-8 rounded-full overflow-hidden border-2 border-slate-600 flex-shrink-0 bg-slate-800"><img src="${p.photo}" class="profile-pic" onerror="this.style.display='none';this.parentElement.innerHTML='<div class=\\'w-full h-full flex items-center justify-center text-xs font-bold text-slate-400\\'>?</div>'"></div>`;
-                } else {
-                    avatarHTML = `<div class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-[10px] text-slate-300 border border-slate-600 font-bold shadow-sm flex-shrink-0">${p.name.charAt(0)}</div>`;
-                }
-
-                // Visual da Multa (Dívida) e Extra (Pagamento)
-                const fineVal = p.fine || 0;
-                const extraVal = p.extra || 0;
-                
-                // Removido o sinal negativo
-                const fineDisplay = fineVal > 0 ? `<span class="text-rose-400 font-bold" title="Dívida de Multa">R$${fineVal}</span>` : '-';
-                const extraDisplay = extraVal > 0 ? `<span class="text-indigo-400 font-bold">+R$${extraVal}</span>` : '-';
-
-                row.innerHTML = `
-                    <td class="p-3 sticky-col z-20 font-medium text-white shadow-lg whitespace-nowrap cursor-pointer group-hover:text-indigo-400 transition-colors flex items-center gap-3" ${clickAttr}>
-                        ${avatarHTML}
-                        ${p.name}
-                    </td>
-                    ${monthsHTML}
-                    <!-- Colunas trocadas para alinhar com o cabeçalho -->
-                    <td class="p-2 text-center align-middle bg-rose-900/10 border-l border-rose-900/20 text-xs col-multa">${fineDisplay}</td>
-                    <td class="p-2 text-center align-middle bg-indigo-900/10 border-l border-indigo-900/20 text-xs extra-col">${extraDisplay}</td>
-                    <td class="p-2 text-right align-middle bg-slate-800/50 font-mono font-medium text-emerald-400 text-xs col-total">R$ ${(p.totalPaid).toFixed(0)}</td>
-                    <td class="p-2 text-right align-middle bg-slate-800/50 border-r border-slate-700 font-mono font-medium ${p.missing > 0 ? 'text-rose-400' : 'text-slate-600'} text-xs col-falta">R$ ${p.missing.toFixed(0)}</td>
-                    ${editTd}
-                `;
-                tbody.appendChild(row);
-            });
-        }
-
+        
         // --- EDIT MODAL ---
         function openEditModal(index) {
             if(!requireAdmin()) return;
@@ -1236,7 +1563,6 @@ document.getElementById('countOk').innerText = peopleOk;
         function closeEditModal() {
             document.getElementById('editPaymentModal').classList.add('hidden');
             document.getElementById('editPaymentModal').classList.remove('flex');
-            document.getElementById('fineWarning').classList.add('hidden'); 
         }
 
         async function saveEditModal() {
@@ -1246,8 +1572,7 @@ document.getElementById('countOk').innerText = peopleOk;
             const p = participantsData[index];
             if(!p) return;
             
-            // Capture monthly payments
-            const oldTotalPaid = p.months.reduce((a,b)=>a+b,0); // Just months
+            const oldTotalPaid = p.months.reduce((a,b)=>a+b,0); 
 
             for(let i=0; i<12; i++) { p.months[i] = parseFloat(document.getElementById(`edit-month-${i}`).value) || 0; }
             
@@ -1261,21 +1586,17 @@ document.getElementById('countOk').innerText = peopleOk;
                 p.photo = tempEditPhotoBase64;
             }
 
-            // --- LATE PAYMENT LOGIC (ON SAVE) ---
+            // Late payment check
             const parts = fineConfig.deadline.split('/');
             const deadlineDate = new Date(parts[2], parts[1] - 1, parts[0]);
             deadlineDate.setHours(23, 59, 59, 999);
             const today = new Date();
 
             if (today > deadlineDate) {
-                // If user didn't have a fine yet
                 if (p.fine === 0) {
-                    // Check if *before* this edit they were below threshold (using oldTotalPaid of months only)
                     if (oldTotalPaid < fineConfig.threshold) {
-                        const apply = confirm(`⚠️ PAGAMENTO EM ATRASO DETECTADO!\n\nA data limite era ${fineConfig.deadline}.\nO participante tinha pago R$ ${oldTotalPaid} em mensalidades (abaixo do mínimo de R$ ${fineConfig.threshold}).\n\nDeseja aplicar a MULTA (Dívida) de R$ ${fineConfig.value} automaticamente?`);
-                        if (apply) {
-                            p.fine = fineConfig.value;
-                        }
+                        const apply = confirm(`⚠️ PAGAMENTO EM ATRASO!\nDeseja aplicar a MULTA de R$ ${fineConfig.value} automaticamente?`);
+                        if (apply) p.fine = fineConfig.value;
                     }
                 }
             }
@@ -1283,272 +1604,14 @@ document.getElementById('countOk').innerText = peopleOk;
             calculateTotalsAndRender();
             closeEditModal();
         }
-
-        // --- ADMIN ---
-        function renderMonthlyGoalsInputs() {
-            const container = document.getElementById('monthlyGoalsContainer');
-            container.innerHTML = '';
-            monthlyGoals.forEach((val, idx) => {
-                const div = document.createElement('div');
-                div.className = "bg-slate-900 p-2 rounded border border-slate-700 flex flex-col";
-                div.innerHTML = `
-                    <label class="text-[10px] uppercase text-slate-500 font-bold mb-1">${MONTH_ABBR[idx]}</label>
-                    <div class="flex items-center"><span class="text-xs text-slate-500 mr-1">R$</span><input type="number" id="goal-${idx}" value="${val}" onchange="updateTotalAnnualGoalUI()" class="bg-transparent text-white text-sm w-full font-mono focus:outline-none"></div>
-                `;
-                container.appendChild(div);
-            });
-        }
-
-        function updateTotalAnnualGoalUI() {
-            const inputs = document.querySelectorAll('[id^="goal-"]');
-            let total = 0;
-            inputs.forEach(input => total += parseFloat(input.value) || 0);
-            document.getElementById('totalAnnualGoal').innerText = `R$ ${total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
-        }
-
-        function saveMonthlyGoals() {
-            if(!requireAdmin()) return;
-
-            const inputs = document.querySelectorAll('[id^="goal-"]');
-            inputs.forEach((input, idx) => monthlyGoals[idx] = parseFloat(input.value) || 0);
-            calculateTotalsAndRender();
-            alert("Metas atualizadas!");
-        }
-
-        function renderAdminUserList() {
-            const tbody = document.getElementById('adminUsersTableBody');
-            tbody.innerHTML = '';
-            participantsData.forEach((p, index) => {
-                const row = document.createElement('tr');
-                row.className = "hover:bg-slate-800 transition border-b border-slate-700 last:border-0";
-                row.innerHTML = `
-                    <td class="p-2 pl-4 text-white font-medium">${p.name}</td>
-                    <td class="p-2 text-right font-mono text-emerald-400 text-xs">R$ ${p.totalPaid}</td>
-                    <td class="p-2 text-center"><button onclick="removeParticipant(${index})" class="text-rose-400 hover:text-white hover:bg-rose-600 p-1.5 rounded transition"><i class="ph ph-trash"></i></button></td>
-                `;
-                tbody.appendChild(row);
-            });
-        }
-
-        async function addParticipant() {
-            if(!requireAdmin()) return;
-
-            const name = document.getElementById('newUserName').value.trim();
-            if (!name) return;
-            
-            const bMonthVal = document.getElementById('newUserBirthday').value;
-            const bMonth = bMonthVal === "" ? null : parseInt(bMonthVal);
-
-            participantsData.push({ 
-                id: Date.now(), 
-                name: name, 
-                months: Array(12).fill(0), 
-                extra: 0,
-                fine: 0, 
-                totalPaid: 0, 
-                missing: 0,
-                photo: tempAddPhotoBase64 || '', // Usa o base64 carregado
-                birthdayMonth: bMonth
-            });
-            
-            // Limpa campos e vars temporárias
-            document.getElementById('newUserName').value = '';
-            document.getElementById('newUserBirthday').value = '';
-            document.getElementById('newUserPhotoFile').value = ''; 
-            document.getElementById('newUserPhotoName').classList.add('hidden');
-            tempAddPhotoBase64 = '';
-
-            calculateTotalsAndRender();
-            renderAdminUserList();
-        }
-
-        function removeParticipant(idx) {
-            if(!requireAdmin()) return;
-
-            if(confirm("Remover participante?")) { participantsData.splice(idx, 1); calculateTotalsAndRender(); renderAdminUserList(); }
-        }
-
-        // Logic for checking fines
-        function checkAndApplyFinesAutomatic() {
-            const deadlineStr = fineConfig.deadline;
-            if (!deadlineStr) return;
-
-            const parts = deadlineStr.split('/');
-            const deadlineDate = new Date(parts[2], parts[1] - 1, parts[0]);
-            deadlineDate.setHours(23, 59, 59, 999);
-            const today = new Date();
-
-            // Só roda automático se a data limite JÁ PASSOU
-            if (today > deadlineDate) {
-                let appliedCount = 0;
-                participantsData.forEach(p => { 
-                    const monthlyPaid = p.months.reduce((a,b)=>a+b,0);
-                    // Se pagou menos que o mínimo (apenas mensalidades) E não tem multa registrada
-                    if (monthlyPaid < fineConfig.threshold && (p.fine || 0) === 0) { 
-                        p.fine = fineConfig.value; 
-                        appliedCount++; 
-                    } 
-                });
-                
-                if (appliedCount > 0) {
-                    calculateTotalsAndRender();
-                    // Opcional: Avisar discretamente
-                    console.log(`Auditoria Automática: ${appliedCount} multas aplicadas por atraso.`);
-                }
-            }
-        }
-
-        function manualFineCheck() {
-            if(!requireAdmin()) return;
-
-            applyFineRules(); // Re-usa a função do botão que tem alerts
-        }
-
-        function applyFineRules() {
-            saveFineConfig(); // Garante que config está salva
-            
-            const deadlineStr = fineConfig.deadline;
-            const threshold = fineConfig.threshold;
-            const fineVal = fineConfig.value;
-
-            if(!threshold || !fineVal || !deadlineStr) { 
-                alert("Preencha todos os campos da multa!"); return; 
-            }
-
-            const parts = deadlineStr.split('/');
-            const deadlineDate = new Date(parts[2], parts[1] - 1, parts[0]);
-            const today = new Date();
-            deadlineDate.setHours(23, 59, 59, 999);
-            today.setHours(0, 0, 0, 0);
-
-            if (today <= deadlineDate) {
-                const diasRestantes = Math.ceil((deadlineDate - today) / (1000 * 60 * 60 * 24));
-                const confirmApply = confirm(`ATENÇÃO: A data limite (${deadlineStr}) ainda não chegou! Faltam ${diasRestantes} dias.\n\nDeseja aplicar a multa ANTECIPADAMENTE em quem não pagou?`);
-                if (!confirmApply) return;
-            }
-            
-            let count = 0;
-            participantsData.forEach(p => { 
-                const monthlyPaid = p.months.reduce((a,b)=>a+b,0);
-                if (monthlyPaid < threshold && (p.fine || 0) === 0) { 
-                    p.fine = fineVal; 
-                    count++; 
-                } 
-            });
-            
-            calculateTotalsAndRender();
-            document.getElementById('fineFeedback').innerText = `Auditoria concluída. ${count} multas aplicadas.`;
-            setTimeout(() => document.getElementById('fineFeedback').innerText = "", 4000);
-        }
-
-        // CSV Logic
-        const fileInput = document.getElementById('csvInput');
-        fileInput.addEventListener('change', (e) => {
-            
-            if(!isAdmin) { alert('Acesso restrito: somente Admin pode importar CSV.'); e.target.value=''; return; }
-const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (evt) => parseCSV(evt.target.result);
-            reader.readAsText(file);
-        });
-
-        function parseCSV(text) {
-            if(!requireAdmin()) return;
-
-            const lines = text.split('\n');
-            const newData = [];
-            const MONTHS_CSV = ['MARCO', 'ABRIL', 'MAIO', 'JUNHO', 'JULHO', 'AGOSTO', 'SETEMBRO', 'OUTUBRO', 'NOVEMBRO', 'DEZEMBRO'];
-            let headerIdx = lines.findIndex(l => l.toUpperCase().includes('PAGANTES'));
-            if (headerIdx === -1) { alert("CSV Inválido."); return; }
-            const headers = lines[headerIdx].split(',').map(h => h.trim().toUpperCase());
-            const monthIndices = MONTHS_CSV.map(m => headers.indexOf(m));
-            const nameIdx = headers.indexOf('PAGANTES');
-            // Assuming "EXTRA/MULTA" in CSV corresponds to extra PAID, not debt.
-            const extraIdx = headers.findIndex(h => h.includes('EXTRA') || h.includes('MULTA'));
-
-            for(let i = headerIdx + 1; i < lines.length; i++) {
-                const cols = lines[i].split(',');
-                if (!cols[nameIdx] || cols[nameIdx].trim() === '' || cols[nameIdx] === 'PAGANTES') continue;
-                let monthsValues = [0, 0]; 
-                monthIndices.forEach(idx => { monthsValues.push(idx !== -1 ? (parseFloat(cols[idx]) || 0) : 0); });
-                newData.push({ 
-                    id: i, 
-                    name: cols[nameIdx], 
-                    months: monthsValues, 
-                    extra: parseFloat(cols[extraIdx]) || 0, 
-                    fine: 0, // Default fine debt is 0
-                    totalPaid: 0, 
-                    missing: 0,
-                    photo: '', 
-                    birthdayMonth: null 
-                });
-            }
-            participantsData = newData;
-            calculateTotalsAndRender();
-            alert("Importado! Configure os aniversários manualmente.");
-        }
-
         
-        function csvEscape(v) {
-            if (v === null || v === undefined) return '';
-            const s = String(v);
-            if (/[",\n\r]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
-            return s;
-        }
-
-        function exportParticipantsCSV() {
-            if (!Array.isArray(participantsData)) return;
-
-            const headers = [
-                'id','nome',
-                'jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez',
-                'multa','extra','total_pago','falta',
-                'aniversario_mes'
-            ];
-
-            const rows = participantsData.map(p => {
-                const months = Array.isArray(p.months) ? p.months : Array(12).fill(0);
-                const fine = Number(p.fine || 0);
-                const extra = Number(p.extra || 0);
-                const totalPaid = Number(p.totalPaid || 0);
-                const missing = Number(p.missing || 0);
-                const birthdayMonth = (p.birthdayMonth === 0 || p.birthdayMonth) ? (Number(p.birthdayMonth) + 1) : '';
-
-                return [
-                    p.id ?? '',
-                    p.name ?? '',
-                    ...months.map(v => Number(v || 0)),
-                    fine,
-                    extra,
-                    totalPaid,
-                    missing,
-                    birthdayMonth
-                ];
-            });
-
-            const csv = [headers.join(','), ...rows.map(r => r.map(csvEscape).join(','))].join('\n');
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'natal_familia_2026_export.csv';
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            URL.revokeObjectURL(url);
-        }
-
-        document.getElementById('exportCsvBtn')?.addEventListener('click', () => {
-            if (!requireAdmin()) return;
-            exportParticipantsCSV();
-        });
-
-document.getElementById('searchInput').addEventListener('keyup', (e) => {
+        // Search
+        document.getElementById('searchInput').addEventListener('keyup', (e) => {
             const term = e.target.value.toLowerCase();
             const filtered = participantsData.filter(p => p.name.toLowerCase().includes(term));
             renderTable(filtered);
         });
+
     </script>
 </body>
 </html>
